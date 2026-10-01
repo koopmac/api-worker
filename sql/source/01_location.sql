@@ -43,9 +43,7 @@ network_state_map (network_slug, state) AS (
         ('ausnet',            'VIC')
 ),
 
--- [F7] Default usage = the regulator's reference usage for the network (official_usage_kwh in benchmark_ref:
--- 10,000 kWh for DMO, VDO and TAS; 25,000 kWh for the ACT). Networks without a benchmark (Ergon) use 10,000 kWh,
--- the DMO small business convention. At the default, the benchmark is exactly the published figure.
+-- [F7] Default usage = 10,000 kWh a year, the AER and ESC small business reference usage, for every network.
 
 -- [HARDCODED][F8] Network load-profile defaults: TOU kWh split + max demand.
 -- ILLUSTRATIVE, not derived from data. Replace with regulator usage profiles when sourced.
@@ -54,32 +52,29 @@ network_profile_defaults (network_slug, peak_share, shoulder_share, max_demand_k
     VALUES ('evoenergy-electricity', 0.25::numeric, 0.45::numeric, 15::numeric)
 ),
 
--- [HARDCODED] Regulator small business reference prices for 2026-27, by network (DB slugs), GST inclusive.
---   official_annual_inc_gst      published flat-rate annual price at official_usage_kwh
---   official_tou_annual_inc_gst  published time-of-use annual price, where the regulator publishes one
---   flat_supply / flat_usage     the regulated flat tariff (c/day, c/kWh), used to cost the benchmark at any
---                                other usage: supply x 365 + usage x kWh
---   DMO (NSW, SE QLD, SA): AER DMO 8 final determination, Table 2.2 (prices) and Figure 2.4 (small business
---        flat rate tariff caps). Caps x 10,000 kWh reproduce the published prices to the dollar.
---   VDO (VIC): ESC 2026-27 final decision, Table 3 (bills) and the published small business flat tariffs
---        (<40 MWh). AusNet's two blocks are the same rate. Tariffs reproduce the bills within $2 (rounding).
---   TAS: no published annual figure. Aurora's regulated Tariff 23 (Business Single Rate) from 1 July 2026.
---   ACT: ICRC small business reference price. No tariff components published, so no figure at other usage.
---   Not covered: Ergon (regional QLD, QCA notified prices). Update every July.
-benchmark_ref (network_slug, name, regulator, period, official_annual_inc_gst, official_tou_annual_inc_gst, official_usage_kwh, flat_supply_c_per_day_inc_gst, flat_usage_c_per_kwh_inc_gst, source_url) AS (
+-- [HARDCODED] Regulated small business standing offer tariffs for 2026-27, by network (DB slugs), GST inclusive.
+--   Only networks with published UNIT PRICES are listed: the benchmark is always costed from them at the
+--   requested usage (supply x 365 + usage x kWh), the same usage the plans are costed at.
+--   published_annual_inc_gst / published_usage_kwh = the regulator's own headline figure, for reference only.
+--   DMO (NSW, SE QLD, SA): AER DMO 8 final determination, Table 2.2 and Figure 2.4 (small business flat rate
+--        tariff caps). The caps reproduce the published prices to the dollar.
+--   VDO (VIC): ESC 2026-27 small business flat tariffs (<40 MWh) and final decision Table 3. AusNet's two
+--        blocks are the same rate. The tariffs reproduce the published bills within $2 (rounding).
+--   TAS: Aurora's regulated Tariff 23 (Business Single Rate) from 1 July 2026. No published annual figure.
+--   Not listed (no unit prices): ACT (ICRC publishes an annual reference price only), Ergon (QCA). Update every July.
+benchmark_ref (network_slug, name, regulator, period, supply_c_per_day_inc_gst, usage_c_per_kwh_inc_gst, published_annual_inc_gst, published_usage_kwh, source_url) AS (
     VALUES
-        ('evoenergy-electricity', 'ACT small business reference price', 'ICRC', '2026-27', 5217::numeric, NULL::numeric, 25000::numeric, NULL::numeric, NULL::numeric, 'https://www.legislation.act.gov.au/ni/2026-259/'),
-        ('ausgrid',   'Default Market Offer (Ausgrid)',           'AER', '2026-27', 4523::numeric, 4450::numeric, 10000::numeric, 372.7476::numeric, 31.6293::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
-        ('endeavour', 'Default Market Offer (Endeavour Energy)',  'AER', '2026-27', 4343::numeric, 4326::numeric, 10000::numeric, 244.1375::numeric, 34.5198::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
-        ('essential', 'Default Market Offer (Essential Energy)',  'AER', '2026-27', 5517::numeric, 4919::numeric, 10000::numeric, 405.6542::numeric, 40.3667::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
-        ('energex',   'Default Market Offer (Energex)',           'AER', '2026-27', 3849::numeric, 3693::numeric, 10000::numeric, 261.6257::numeric, 28.9359::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
-        ('sapower',   'Default Market Offer (SA Power Networks)', 'AER', '2026-27', 5162::numeric, 4868::numeric, 10000::numeric, 185.5810::numeric, 44.8449::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
-        ('ausnet',    'Victorian Default Offer (AusNet)',         'ESC', '2026-27', 3896::numeric, NULL::numeric, 10000::numeric, 129.39::numeric,   34.23::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
-        ('citipower', 'Victorian Default Offer (CitiPower)',      'ESC', '2026-27', 3033::numeric, NULL::numeric, 10000::numeric, 152.19::numeric,   24.77::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
-        ('jemena',    'Victorian Default Offer (Jemena)',         'ESC', '2026-27', 3488::numeric, NULL::numeric, 10000::numeric, 167.09::numeric,   28.78::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
-        ('powercor',  'Victorian Default Offer (Powercor)',       'ESC', '2026-27', 3357::numeric, NULL::numeric, 10000::numeric, 169.78::numeric,   27.36::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
-        ('united',    'Victorian Default Offer (United Energy)',  'ESC', '2026-27', 3124::numeric, NULL::numeric, 10000::numeric, 154.00::numeric,   25.61::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
-        ('tasnetworks', 'Aurora Energy regulated small business tariff (Tariff 23)', 'OTTER', '2026-27', 3371::numeric, NULL::numeric, 10000::numeric, 170.00::numeric, 27.50::numeric, 'https://www.auroraenergy.com.au/business/products/business-all-pricing')
+        ('ausgrid',   'Default Market Offer (Ausgrid)',           'AER', '2026-27', 372.7476::numeric, 31.6293::numeric, 4523::numeric, 10000::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('endeavour', 'Default Market Offer (Endeavour Energy)',  'AER', '2026-27', 244.1375::numeric, 34.5198::numeric, 4343::numeric, 10000::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('essential', 'Default Market Offer (Essential Energy)',  'AER', '2026-27', 405.6542::numeric, 40.3667::numeric, 5517::numeric, 10000::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('energex',   'Default Market Offer (Energex)',           'AER', '2026-27', 261.6257::numeric, 28.9359::numeric, 3849::numeric, 10000::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('sapower',   'Default Market Offer (SA Power Networks)', 'AER', '2026-27', 185.5810::numeric, 44.8449::numeric, 5162::numeric, 10000::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('ausnet',    'Victorian Default Offer (AusNet)',         'ESC', '2026-27', 129.39::numeric,   34.23::numeric,   3896::numeric, 10000::numeric, 'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('citipower', 'Victorian Default Offer (CitiPower)',      'ESC', '2026-27', 152.19::numeric,   24.77::numeric,   3033::numeric, 10000::numeric, 'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('jemena',    'Victorian Default Offer (Jemena)',         'ESC', '2026-27', 167.09::numeric,   28.78::numeric,   3488::numeric, 10000::numeric, 'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('powercor',  'Victorian Default Offer (Powercor)',       'ESC', '2026-27', 169.78::numeric,   27.36::numeric,   3357::numeric, 10000::numeric, 'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('united',    'Victorian Default Offer (United Energy)',  'ESC', '2026-27', 154.00::numeric,   25.61::numeric,   3124::numeric, 10000::numeric, 'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('tasnetworks', 'Aurora Energy regulated small business tariff (Tariff 23)', 'OTTER', '2026-27', 170.00::numeric, 27.50::numeric, NULL::numeric, NULL::numeric, 'https://www.auroraenergy.com.au/business/products/business-all-pricing')
 ),
 
 -- Location resolution.
@@ -128,10 +123,9 @@ usage_resolved AS (
         (x.peak_share + x.shoulder_share) > 1                 AS invalid_shares
     FROM (
         SELECT
-            COALESCE(p.usage_kwh,      brd.official_usage_kwh, 10000::numeric) AS annual_kwh,
-            CASE WHEN p.usage_kwh IS NOT NULL          THEN 'provided'
-                 WHEN brd.official_usage_kwh IS NOT NULL THEN 'regulator_reference'
-                 ELSE 'small_business_default' END     AS usage_default_basis,
+            COALESCE(p.usage_kwh,      10000::numeric)          AS annual_kwh,
+            CASE WHEN p.usage_kwh IS NOT NULL THEN 'provided'
+                 ELSE 'regulator_reference' END                AS usage_default_basis,
             COALESCE(p.peak_share,     npd.peak_share)         AS peak_share,
             COALESCE(p.shoulder_share, npd.shoulder_share)     AS shoulder_share,
             COALESCE(p.max_demand_kw,  npd.max_demand_kw)      AS max_demand_kw,
@@ -143,33 +137,23 @@ usage_resolved AS (
             ]::text[], NULL::text) AS assumed
         FROM params p
         LEFT JOIN single_network sn            ON TRUE
-        LEFT JOIN benchmark_ref brd            ON brd.network_slug = sn.network_slug
         LEFT JOIN network_profile_defaults npd ON npd.network_slug = sn.network_slug
     ) x
 ),
 
 benchmark_resolved AS (
+    -- [F11] The standing offer costed from its regulated tariff at the SAME usage as the plans.
     SELECT
         br.name,
         br.regulator,
         br.period,
-        br.official_annual_inc_gst,
-        br.official_tou_annual_inc_gst,
-        br.official_usage_kwh,
-        br.flat_supply_c_per_day_inc_gst,
-        br.flat_usage_c_per_kwh_inc_gst,
-        -- [F11] At the reference usage: the published figure, exactly. At any other usage: the regulated
-        -- flat tariff costed (supply x 365 + usage x kWh). No tariff components (ACT): not available.
-        CASE
-            WHEN u.annual_kwh = br.official_usage_kwh THEN br.official_annual_inc_gst
-            WHEN br.flat_supply_c_per_day_inc_gst IS NOT NULL THEN
-                ROUND((br.flat_supply_c_per_day_inc_gst * 365 + br.flat_usage_c_per_kwh_inc_gst * u.annual_kwh) / 100, 0)
-        END AS standing_offer_at_this_usage_inc_gst,
-        CASE
-            WHEN u.annual_kwh = br.official_usage_kwh THEN 'published'
-            WHEN br.flat_supply_c_per_day_inc_gst IS NOT NULL THEN 'tariff_costed'
-            ELSE 'not_available'
-        END AS standing_offer_method,
+        u.annual_kwh,
+        ROUND((br.supply_c_per_day_inc_gst * 365 + br.usage_c_per_kwh_inc_gst * u.annual_kwh) / 100, 0)
+            AS annual_cost_inc_gst,
+        br.supply_c_per_day_inc_gst,
+        br.usage_c_per_kwh_inc_gst,
+        br.published_annual_inc_gst,
+        br.published_usage_kwh,
         br.source_url
     FROM single_network sn
     JOIN benchmark_ref br ON br.network_slug = sn.network_slug

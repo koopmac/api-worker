@@ -1,0 +1,140 @@
+# Termina rates API
+
+Business electricity rates API on Cloudflare Workers, backed by Metabase saved questions.
+
+```
+api.termina.com/v1/rates  (Worker: validation, rate limit, edge cache, response shaping)
+   -> Cloudflare Access (service token)
+   -> metabase.termina.io  (five saved questions)
+   -> Postgres
+```
+
+## Repo layout
+
+```
+src/index.ts                     the Worker
+sql/source/01..05.sql            the queries as written, with hardcoded [TEST] params (run in any SQL client)
+sql/metabase/01..05.sql          generated: params come from Metabase variables. Don't edit by hand
+scripts/build-metabase-sql.mjs   sql/source -> sql/metabase
+scripts/sync-metabase.mjs        creates/updates the five Metabase questions via the API
+wrangler.jsonc                   Worker config (card IDs, URLs, rate limit)
+```
+
+## API
+
+`GET /v1/rates`
+
+| Param | Notes |
+|---|---|
+| `distributor` | slug, e.g. `evoenergy` |
+| `postcode` | 4 digits. Can combine with `distributor` |
+| `nmi` | 10 or 11 characters. Overrides the others |
+| `usage_kwh` | whole number, 1,000 to 2,000,000. Default: state representative usage |
+| `peak_share`, `shoulder_share` | 0 to 1, sum at most 1. Default: network profile |
+| `max_demand_kw` | Default: network profile |
+| `offer_source` | `all` (default), `public`, `termina_buying_group` |
+| `limit` | 1 to 50, default 20 |
+| `cursor` | `next_cursor` from the previous page |
+
+At least one of `distributor`, `postcode`, `nmi` is required.
+
+Response: `location`, `usage`, `benchmark`, `stats`, `plans`, `next_cursor`, `warnings`, `page_url`, `meta`.
+All prices include GST.
+
+| Status | When |
+|---|---|
+| 200 | Rates returned. Ambiguous postcodes return 200 with an `ambiguous_location` warning and no plans |
+| 400 | Invalid input (`error.code` says which) |
+| 422 | `out_of_coverage`: no network for that location |
+| 429 | Rate limited (120 requests per minute per IP) |
+| 503 | Metabase unreachable or a query failed (cached pages keep serving) |
+
+`GET /health` checks the Worker can reach Metabase through Access.
+
+### How a request runs
+
+1. Validate input.
+2. Run **01 location**. Out of coverage → 422. Ambiguous → return with a warning (one query total).
+3. Run **02 usage, 03 benchmark, 04 plans, 05 stats** in parallel. Plans asks for `limit + 1` rows to know if there's another page.
+4. Strip internal `_` fields, turn `_plan_warnings` into each plan's `warnings`, add top-level warnings
+   (`no_default_usage`, `illustrative_profile`, `benchmark_scaled`), build `next_cursor` and `page_url`.
+5. Cache the 200 response at the edge for an hour.
+
+## Setup
+
+### 1. Cloudflare Access service token
+Zero Trust → Access → Service credentials → **Create service token** (`rates-api-worker`). Save the ID and secret.
+Then open the Access application for `metabase.termina.io` and add a policy:
+**Action: Service Auth**, Include: Service Token = `rates-api-worker`.
+Without this policy Access ignores the token and redirects to the login page.
+
+### 2. Metabase API key
+Admin → Settings → Authentication → **API keys**. Put it in a group that can view the "Rates API" collection
+and query the rates database. Not an admin key.
+
+### 3. Create the five saved questions
+Easiest is the sync script (run from your machine, Node 18+):
+
+```bash
+npm install
+METABASE_URL=https://metabase.termina.io \
+METABASE_API_KEY=... \
+CF_ACCESS_CLIENT_ID=... CF_ACCESS_CLIENT_SECRET=... \
+METABASE_DATABASE_ID=<rates db id> \
+METABASE_COLLECTION_ID=<Rates API collection id> \
+npm run sync:metabase
+```
+
+The database ID is in the URL at Admin → Databases; the collection ID is in the collection's URL.
+It prints the five card IDs: paste them into `wrangler.jsonc`, and commit `metabase-cards.json` so
+later runs update the same questions.
+
+Manual alternative: create five native questions, paste each `sql/metabase/*.sql`, and set all eleven
+variables (`distributor`, `postcode`, `nmi`, `usage_kwh`, `peak_share`, `shoulder_share`, `max_demand_kw`,
+`offer_source`, `lim`, `cursor_cost`, `cursor_offer_id`) to type **Text**, not required.
+
+### 4. Deploy from GitHub
+1. Push this folder to a GitHub repo.
+2. Cloudflare dashboard → Workers & Pages → Create → **Import a repository** → pick the repo.
+   Build command: leave blank. Deploy command: `npx wrangler deploy`.
+3. Worker → Settings → Variables and Secrets → add **secrets** `CF_ACCESS_CLIENT_ID`,
+   `CF_ACCESS_CLIENT_SECRET`, `METABASE_API_KEY`.
+4. Every push to `main` redeploys.
+
+The `api.termina.com` custom domain is created on first deploy (the zone must be on this Cloudflare account).
+
+### 5. Test
+```bash
+curl https://api.termina.com/health
+curl -i "https://api.termina.com/v1/rates?distributor=evoenergy&limit=5"   # twice: X-Cache MISS then HIT
+curl "https://api.termina.com/v1/rates?postcode=2620"                       # ambiguous_location warning
+```
+
+## Changing a query
+
+1. Edit the file in `sql/source/` (keep the shared header identical across 01 to 05).
+2. `npm run build:sql`
+3. `npm run sync:metabase`
+4. Commit. If the output columns changed, update `src/index.ts` to match.
+
+The build makes two changes to the source SQL: it replaces the `params` block with Metabase variables, and
+returns `_cursor_cost` as text in 04 so the paging cursor round-trips exactly.
+
+## Local development
+
+```bash
+cp .dev.vars.example .dev.vars   # fill in the three secrets
+npm run dev                       # http://localhost:8787
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| `/health` shows `metabase_status: 302` | Access rejected the token: Service Auth policy missing or wrong secret |
+| `/health` shows 502 or 530 | Tunnel behind Metabase is down |
+| 503 and the log says 401/403 | Metabase API key wrong or lacks collection access |
+| 503 and the log mentions a template tag | Variable missing or not type Text on a question |
+| Old numbers after a data refresh | Edge cache (1 hour). Purge the `api.termina.com` cache after refreshes |
+
+Worker logs: dashboard → Worker → Logs. Each request logs one JSON line; Metabase failures log `metabase_error`.

@@ -1,12 +1,19 @@
 /**
  * Termina business electricity rates API (v1)
  *
- * api.termina.com/v1/rates -> Cloudflare Access (service token) -> Metabase saved questions -> Postgres
+ * api.termina.com/v1/rates -> Cloudflare Access (service token) -> Metabase /api/dataset -> Postgres
  *
- * Five saved questions, one per response block (sql/metabase/01..05):
+ * Five native queries bundled into the Worker, one per response block (sql/metabase/01..05).
+ * Request values are sent as Metabase variables (never pasted into the SQL), so Metabase escapes them.
  *   01 location  -> resolve the network first (422 if out of coverage, warning if ambiguous)
  *   02 usage, 03 benchmark, 04 plans, 05 stats -> run in parallel
  */
+
+import Q_LOCATION from "../sql/metabase/01_location.sql";
+import Q_USAGE from "../sql/metabase/02_usage.sql";
+import Q_BENCHMARK from "../sql/metabase/03_benchmark.sql";
+import Q_PLANS from "../sql/metabase/04_plans.sql";
+import Q_STATS from "../sql/metabase/05_stats.sql";
 
 interface RateLimiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
@@ -17,11 +24,7 @@ export interface Env {
   SITE_URL: string;
   PAGE_PATH_TEMPLATE: string; // e.g. "/cheapest-business-electricity/{state}"
   METABASE_URL: string;
-  CARD_LOCATION: string;
-  CARD_USAGE: string;
-  CARD_BENCHMARK: string;
-  CARD_PLANS: string;
-  CARD_STATS: string;
+  METABASE_DATABASE_ID: string; // the rates database's ID in Metabase
   // Secrets
   CF_ACCESS_CLIENT_ID: string;
   CF_ACCESS_CLIENT_SECRET: string;
@@ -144,11 +147,11 @@ async function route(url: URL, env: Env): Promise<Response> {
 // ---------------------------------------------------------------------------
 async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
   const q = parseQuery(search);
-  const base = cardParams(q);
+  const base = queryParams(q);
   const warnings: Warning[] = [];
 
   // 1. Location first: it decides whether the other four are worth running
-  const locRow = (await runCard(env, env.CARD_LOCATION, base))[0];
+  const locRow = (await runQuery(env, "01_location", Q_LOCATION, base))[0];
   if (!locRow) throw new ApiError(500, "internal_error", "Location lookup returned no row.");
 
   if (locRow._out_of_coverage === true) {
@@ -184,10 +187,10 @@ async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
 
   // 2. Other blocks in parallel. Plans fetches limit + 1 to detect another page.
   const [usageRows, benchRows, planRows, statsRows] = await Promise.all([
-    runCard(env, env.CARD_USAGE, base),
-    runCard(env, env.CARD_BENCHMARK, base),
-    runCard(env, env.CARD_PLANS, { ...base, lim: String(q.limit + 1) }),
-    runCard(env, env.CARD_STATS, base),
+    runQuery(env, "02_usage", Q_USAGE, base),
+    runQuery(env, "03_benchmark", Q_BENCHMARK, base),
+    runQuery(env, "04_plans", Q_PLANS, { ...base, lim: String(q.limit + 1) }),
+    runQuery(env, "05_stats", Q_STATS, base),
   ]);
 
   // Usage
@@ -351,8 +354,8 @@ function num(v: string | undefined, name: string, min: number, max: number, inte
   return String(n);
 }
 
-// Values passed to every saved question. Missing values are left out, so Metabase uses the SQL default.
-function cardParams(q: RatesQuery): Record<string, string> {
+// Values passed to every query as Metabase variables. Missing values are left out, so Metabase uses the SQL default.
+function queryParams(q: RatesQuery): Record<string, string> {
   const all: Record<string, string | undefined> = {
     distributor: q.distributor,
     postcode: q.postcode,
@@ -405,23 +408,38 @@ function accessHeaders(env: Env): Record<string, string> {
   };
 }
 
-async function runCard(env: Env, cardId: string, params: Record<string, string>): Promise<Row[]> {
+// The eleven variables every query declares (all optional Text; see scripts/build-metabase-sql.mjs)
+const VARIABLES = [
+  "distributor", "postcode", "nmi", "usage_kwh", "peak_share", "shoulder_share",
+  "max_demand_kw", "offer_source", "lim", "cursor_cost", "cursor_offer_id",
+];
+const TEMPLATE_TAGS = Object.fromEntries(
+  VARIABLES.map((name) => [name, { id: name, name, "display-name": name, type: "text", required: false }]),
+);
+
+async function runQuery(env: Env, label: string, sql: string, params: Record<string, string>): Promise<Row[]> {
   const parameters = Object.entries(params).map(([tag, value]) => ({
+    id: tag,
     type: "category",
     target: ["variable", ["template-tag", tag]],
     value,
   }));
   const fail = (reason: string): never => {
-    console.error(JSON.stringify({ metabase_error: reason, card: cardId }));
+    console.error(JSON.stringify({ metabase_error: reason, query: label }));
     throw new ApiError(503, "upstream_unavailable", "Rates data is temporarily unavailable. Try again shortly.");
   };
 
   let res: Response;
   try {
-    res = await fetch(`${env.METABASE_URL}/api/card/${cardId}/query`, {
+    res = await fetch(`${env.METABASE_URL}/api/dataset`, {
       method: "POST",
       headers: { ...accessHeaders(env), "Content-Type": "application/json" },
-      body: JSON.stringify({ parameters }),
+      body: JSON.stringify({
+        database: Number(env.METABASE_DATABASE_ID),
+        type: "native",
+        native: { query: sql, "template-tags": TEMPLATE_TAGS },
+        parameters,
+      }),
       redirect: "manual", // an Access redirect means the service token was rejected
       signal: AbortSignal.timeout(METABASE_TIMEOUT_MS),
     });

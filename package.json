@@ -6,7 +6,8 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "build:sql": "node scripts/build-metabase-sql.mjs"
+    "build:sql": "node scripts/build-metabase-sql.mjs",
+    "build:postcodes": "node scripts/build-postcode-map.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261001.1",

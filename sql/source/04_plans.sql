@@ -1,0 +1,419 @@
+-- =============================================================================
+-- rates_api_v1 / 04_plans.sql
+-- Block: response.plans for GET /v1/rates. One row per plan, sorted, paged (keyset).
+-- Simplified costing: energy (hardcoded peak/shoulder/off-peak split per network) + supply + metering + demand.
+-- Unbundled / C&I offers EXCLUDED [F15].
+-- ALL figures INC GST. Diverges from contract (rates_ex_gst, annual_cost_ex_gst dropped): update contract or add /1.10 later.
+-- App layer: plan_id, source_plan_id, switch_url, next_cursor encoding (fetch lim+1 to detect more).
+-- Flags: [TEST] · [F6] business filter = elec_offers.customer_type (strict) · [F11] vs_standing_offer uses the tariff-costed benchmark
+--        [F8] TOU split hardcoded · [F12]–[F18] costing assumptions · [F14] bill_price INCLUDED · [F15] unbundled EXCLUDED
+-- =============================================================================
+-- ═══════════ SHARED HEADER: keep identical across 01–05 (edit once, paste to all) ═══════════
+WITH
+params AS (
+    -- [TEST] Hardcoded test values. Replace with API params once queries are validated.
+    -- Pass exactly one of distributor / postcode / nmi (distributor + postcode allowed; nmi overrides).
+    SELECT
+        'evoenergy-electricity'::text AS distributor,  -- [TEST] matched on slug derived from distributors.name [F1]
+        NULL::text        AS postcode,         -- [TEST] try '2620' with distributor NULL for the split case
+        NULL::text        AS nmi,              -- [TEST]
+        25000::numeric    AS usage_kwh,        -- [TEST] NULL → state representative usage
+        NULL::numeric     AS peak_share,       -- [TEST] NULL → network default. Share of annual kWh in peak window
+        NULL::numeric     AS shoulder_share,   -- [TEST] NULL → network default. off_peak_share = 1 - peak - shoulder
+        NULL::numeric     AS max_demand_kw,    -- [TEST] NULL → network default
+        'all'::text       AS offer_source,     -- all | public | termina_buying_group
+        20::int           AS lim,
+        NULL::numeric     AS cursor_cost,      -- keyset cursor: _cursor_cost of last row returned
+        NULL::bigint      AS cursor_offer_id   -- keyset cursor: _offer_id of last row returned
+),
+
+-- [HARDCODED][F4] distributor → state. No state column on distributors.
+-- Slugs must match the derived slugs from 00_schema_checks #2 or state resolves NULL.
+network_state_map (network_slug, state) AS (
+    VALUES
+        ('evoenergy-electricity', 'ACT'),   -- slugs as derived from distributors.name in our DB
+        ('ausgrid',           'NSW'),
+        ('endeavour',         'NSW'),
+        ('essential',         'NSW'),
+        ('energex',           'QLD'),
+        ('ergon',             'QLD'),
+        ('sapower',           'SA'),
+        ('tasnetworks',       'TAS'),
+        ('citipower',         'VIC'),
+        ('powercor',          'VIC'),
+        ('jemena',            'VIC'),
+        ('united',            'VIC'),
+        ('ausnet',            'VIC')
+),
+
+-- [F7] Default usage = the regulator's reference usage for the network (official_usage_kwh in benchmark_ref:
+-- 10,000 kWh for DMO, VDO and TAS; 25,000 kWh for the ACT). Networks without a benchmark (Ergon) use 10,000 kWh,
+-- the DMO small business convention. At the default, the benchmark is exactly the published figure.
+
+-- [HARDCODED][F8] Network load-profile defaults: TOU kWh split + max demand.
+-- ILLUSTRATIVE, not derived from data. Replace with regulator usage profiles when sourced.
+-- off_peak_share is derived (1 - peak - shoulder); peak + shoulder must be <= 1.
+network_profile_defaults (network_slug, peak_share, shoulder_share, max_demand_kw) AS (
+    VALUES ('evoenergy-electricity', 0.25::numeric, 0.45::numeric, 15::numeric)
+),
+
+-- [HARDCODED] Regulator small business reference prices for 2026-27, by network (DB slugs), GST inclusive.
+--   official_annual_inc_gst      published flat-rate annual price at official_usage_kwh
+--   official_tou_annual_inc_gst  published time-of-use annual price, where the regulator publishes one
+--   flat_supply / flat_usage     the regulated flat tariff (c/day, c/kWh), used to cost the benchmark at any
+--                                other usage: supply x 365 + usage x kWh
+--   DMO (NSW, SE QLD, SA): AER DMO 8 final determination, Table 2.2 (prices) and Figure 2.4 (small business
+--        flat rate tariff caps). Caps x 10,000 kWh reproduce the published prices to the dollar.
+--   VDO (VIC): ESC 2026-27 final decision, Table 3 (bills) and the published small business flat tariffs
+--        (<40 MWh). AusNet's two blocks are the same rate. Tariffs reproduce the bills within $2 (rounding).
+--   TAS: no published annual figure. Aurora's regulated Tariff 23 (Business Single Rate) from 1 July 2026.
+--   ACT: ICRC small business reference price. No tariff components published, so no figure at other usage.
+--   Not covered: Ergon (regional QLD, QCA notified prices). Update every July.
+benchmark_ref (network_slug, name, regulator, period, official_annual_inc_gst, official_tou_annual_inc_gst, official_usage_kwh, flat_supply_c_per_day_inc_gst, flat_usage_c_per_kwh_inc_gst, source_url) AS (
+    VALUES
+        ('evoenergy-electricity', 'ACT small business reference price', 'ICRC', '2026-27', 5217::numeric, NULL::numeric, 25000::numeric, NULL::numeric, NULL::numeric, 'https://www.legislation.act.gov.au/ni/2026-259/'),
+        ('ausgrid',   'Default Market Offer (Ausgrid)',           'AER', '2026-27', 4523::numeric, 4450::numeric, 10000::numeric, 372.7476::numeric, 31.6293::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('endeavour', 'Default Market Offer (Endeavour Energy)',  'AER', '2026-27', 4343::numeric, 4326::numeric, 10000::numeric, 244.1375::numeric, 34.5198::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('essential', 'Default Market Offer (Essential Energy)',  'AER', '2026-27', 5517::numeric, 4919::numeric, 10000::numeric, 405.6542::numeric, 40.3667::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('energex',   'Default Market Offer (Energex)',           'AER', '2026-27', 3849::numeric, 3693::numeric, 10000::numeric, 261.6257::numeric, 28.9359::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('sapower',   'Default Market Offer (SA Power Networks)', 'AER', '2026-27', 5162::numeric, 4868::numeric, 10000::numeric, 185.5810::numeric, 44.8449::numeric, 'https://www.aer.gov.au/industry/registers/resources/reviews/default-market-offer-2026-27'),
+        ('ausnet',    'Victorian Default Offer (AusNet)',         'ESC', '2026-27', 3896::numeric, NULL::numeric, 10000::numeric, 129.39::numeric,   34.23::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('citipower', 'Victorian Default Offer (CitiPower)',      'ESC', '2026-27', 3033::numeric, NULL::numeric, 10000::numeric, 152.19::numeric,   24.77::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('jemena',    'Victorian Default Offer (Jemena)',         'ESC', '2026-27', 3488::numeric, NULL::numeric, 10000::numeric, 167.09::numeric,   28.78::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('powercor',  'Victorian Default Offer (Powercor)',       'ESC', '2026-27', 3357::numeric, NULL::numeric, 10000::numeric, 169.78::numeric,   27.36::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('united',    'Victorian Default Offer (United Energy)',  'ESC', '2026-27', 3124::numeric, NULL::numeric, 10000::numeric, 154.00::numeric,   25.61::numeric,   'https://www.esc.vic.gov.au/electricity-and-gas/prices-tariffs-and-benchmarks/victorian-default-offer/victorian-default-offer-price-review-2026-27'),
+        ('tasnetworks', 'Aurora Energy regulated small business tariff (Tariff 23)', 'OTTER', '2026-27', 3371::numeric, NULL::numeric, 10000::numeric, 170.00::numeric, 27.50::numeric, 'https://www.auroraenergy.com.au/business/products/business-all-pricing')
+),
+
+-- Location resolution.
+--   [F1] slug derived from distributors.name (no slug column)
+--   [F2] postcode via distributors.included_postcodes (reliability unknown)
+--   [F3] NMI via first 4 chars vs identity_pattern elements (leading '^' stripped in case they're regex)
+--   [F10] distributors.fuel_type = 'elec' value unverified
+network AS (
+    SELECT
+        d.id    AS distributor_id,
+        d.name  AS network_name,
+        s.network_slug,
+        m.state
+    FROM public.distributors d
+    CROSS JOIN params p
+    CROSS JOIN LATERAL (
+        SELECT trim(BOTH '-' FROM regexp_replace(lower(d.name), '[^a-z0-9]+', '-', 'g')) AS network_slug
+    ) s
+    LEFT JOIN network_state_map m ON m.network_slug = s.network_slug
+    WHERE d.fuel_type::text = 'elec'
+      AND CASE
+            WHEN p.nmi IS NOT NULL THEN EXISTS (
+                SELECT 1
+                FROM unnest(d.identity_pattern) ip
+                WHERE LEFT(ltrim(ip::text, '^'), 4) = LEFT(upper(p.nmi), 4)
+            )
+            WHEN p.distributor IS NOT NULL THEN
+                s.network_slug = p.distributor
+                AND (p.postcode IS NULL OR p.postcode = ANY (d.included_postcodes::text[]))
+            WHEN p.postcode IS NOT NULL THEN
+                p.postcode = ANY (d.included_postcodes::text[])
+            ELSE FALSE
+          END
+),
+
+-- Exactly one network, or nothing (ambiguous / out of coverage → no plans, no defaults)
+single_network AS (
+    SELECT * FROM network
+    WHERE (SELECT COUNT(*) FROM network) = 1
+),
+
+usage_resolved AS (
+    SELECT
+        x.*,
+        1 - x.peak_share - x.shoulder_share                   AS off_peak_share,
+        (x.peak_share + x.shoulder_share) > 1                 AS invalid_shares
+    FROM (
+        SELECT
+            COALESCE(p.usage_kwh,      brd.official_usage_kwh, 10000::numeric) AS annual_kwh,
+            CASE WHEN p.usage_kwh IS NOT NULL          THEN 'provided'
+                 WHEN brd.official_usage_kwh IS NOT NULL THEN 'regulator_reference'
+                 ELSE 'small_business_default' END     AS usage_default_basis,
+            COALESCE(p.peak_share,     npd.peak_share)         AS peak_share,
+            COALESCE(p.shoulder_share, npd.shoulder_share)     AS shoulder_share,
+            COALESCE(p.max_demand_kw,  npd.max_demand_kw)      AS max_demand_kw,
+            array_remove(ARRAY[
+                CASE WHEN p.usage_kwh      IS NULL THEN 'usage_kwh'      END,
+                CASE WHEN p.peak_share     IS NULL THEN 'peak_share'     END,
+                CASE WHEN p.shoulder_share IS NULL THEN 'shoulder_share' END,
+                CASE WHEN p.max_demand_kw  IS NULL THEN 'max_demand_kw'  END
+            ]::text[], NULL::text) AS assumed
+        FROM params p
+        LEFT JOIN single_network sn            ON TRUE
+        LEFT JOIN benchmark_ref brd            ON brd.network_slug = sn.network_slug
+        LEFT JOIN network_profile_defaults npd ON npd.network_slug = sn.network_slug
+    ) x
+),
+
+benchmark_resolved AS (
+    SELECT
+        br.name,
+        br.regulator,
+        br.period,
+        br.official_annual_inc_gst,
+        br.official_tou_annual_inc_gst,
+        br.official_usage_kwh,
+        br.flat_supply_c_per_day_inc_gst,
+        br.flat_usage_c_per_kwh_inc_gst,
+        -- [F11] At the reference usage: the published figure, exactly. At any other usage: the regulated
+        -- flat tariff costed (supply x 365 + usage x kWh). No tariff components (ACT): not available.
+        CASE
+            WHEN u.annual_kwh = br.official_usage_kwh THEN br.official_annual_inc_gst
+            WHEN br.flat_supply_c_per_day_inc_gst IS NOT NULL THEN
+                ROUND((br.flat_supply_c_per_day_inc_gst * 365 + br.flat_usage_c_per_kwh_inc_gst * u.annual_kwh) / 100, 0)
+        END AS standing_offer_at_this_usage_inc_gst,
+        CASE
+            WHEN u.annual_kwh = br.official_usage_kwh THEN 'published'
+            WHEN br.flat_supply_c_per_day_inc_gst IS NOT NULL THEN 'tariff_costed'
+            ELSE 'not_available'
+        END AS standing_offer_method,
+        br.source_url
+    FROM single_network sn
+    JOIN benchmark_ref br ON br.network_slug = sn.network_slug
+    CROSS JOIN usage_resolved u
+)
+-- ═══════════ END SHARED HEADER ═══════════
+-- ═══════════ SHARED COSTING BLOCK: keep identical in 04_plans.sql and 05_stats.sql ═══════════
+,
+offers AS (
+    SELECT
+        o.id                                AS offer_id,
+        o.name                              AS plan_name,
+        o.source::text                      AS raw_source,
+        CASE WHEN LOWER(o.source::text) = 'bulk'          -- schema doc says lowercase; LOWER covers 'BULK' too
+             THEN 'termina_buying_group' ELSE 'public' END AS offer_source,
+        o.retailer_id,
+        sn.network_slug,
+        COALESCE(o.is_gst_included, FALSE)  AS is_gst_included,   -- NULL treated as ex-GST
+        o.offer_sheet
+    FROM djangbit.offers_offer o
+    JOIN single_network sn ON sn.distributor_id = o.distributor_id
+    WHERE o.energy::text = 'elec'
+      AND jsonb_typeof(o.offer_sheet -> 'price_lines') = 'array'
+      -- Exclude site-restricted offers
+      AND NOT EXISTS (
+          SELECT 1 FROM djangbit.offers_offerwhitelistedsites w WHERE w.offer_id = o.id
+      )
+      -- [F15] Exclude unbundled / C&I offers (retail-only lines would undercost; network lines not handled yet)
+      AND o.is_unbundled_tariff IS NOT TRUE
+      -- [F6] BUSINESS-ONLY: customer_type lives on public.elec_offers (check #1), bridged via djangbit_offer_id.
+      --      EXISTS (not JOIN) so multiple elec_offers rows per djangbit offer can't fan out.
+      --      STRICT (active): offers with no elec_offers link / NULL customer_type are DROPPED.
+      --      Coverage per source unverified → run check #7; bill_price may map to public.prices instead.
+      AND EXISTS (
+          SELECT 1 FROM public.elec_offers eo
+          WHERE eo.djangbit_offer_id = o.id
+            AND eo.customer_type::text = 'BUSINESS'
+      )
+      -- LENIENT alternative (swap with the block above): keep unlinked / NULL, drop only known residential
+      -- AND NOT EXISTS (
+      --     SELECT 1 FROM public.elec_offers eo
+      --     WHERE eo.djangbit_offer_id = o.id
+      --       AND eo.customer_type::text = 'RESIDENTIAL'
+      -- )
+
+      -- ── Toggles (OFF per current scope: all rates, no versioning) ──
+      -- AND o.source::text IS DISTINCT FROM 'bill_price'             -- [F14] exclude offers derived from customer bills
+      -- AND o.start_date >= CURRENT_DATE - INTERVAL '12 months'      -- crude "current" proxy
+),
+
+price_lines AS (
+    SELECT
+        o.offer_id,
+        pl ->> 'tariff_type'  AS classification,
+        pl ->> 'price_type'   AS price_type,
+        pl ->> 'uom'          AS uom,
+        -- First rule, first step only (stepped / multi-period rules simplified)
+        COALESCE(
+            (pl -> 'rule' -> 'rules' -> 0 -> 'consumption_steps' -> 0 ->> 'price')::numeric,
+            (pl -> 'rule' -> 'rules' -> 0 ->> 'price')::numeric
+        ) AS raw_price,
+        LEAST(COALESCE(disc.pct, 0), 1) AS discount_pct,   -- capped: stacked discounts can't go below $0
+        CASE WHEN o.is_gst_included THEN 1.0 ELSE 1.10 END AS gst_mult
+    FROM offers o
+    CROSS JOIN LATERAL jsonb_array_elements(o.offer_sheet -> 'price_lines') pl
+    -- [F16] Percentage discounts applied unconditionally (no pay-on-time etc. distinction).
+    --       Convention is fraction (check #6b: 119,132 of 119,136 non-zero values in 0–1, across all sources).
+    --       4 outliers treated as whole percent (>= 1): three 1.0 on bill_price (→ 1%, not 100%), one 30 on online (→ 30%).
+    --       These are data errors (offers 130783-5, 88334): fix at source and this CASE becomes a no-op.
+    LEFT JOIN LATERAL (
+        SELECT SUM(
+                   CASE WHEN (d ->> 'value')::numeric >= 1
+                        THEN (d ->> 'value')::numeric / 100
+                        ELSE (d ->> 'value')::numeric END
+               ) AS pct
+        FROM jsonb_array_elements(
+            CASE WHEN jsonb_typeof(pl -> 'rule' -> 'rules' -> 0 -> 'discount') = 'array'
+                 THEN pl -> 'rule' -> 'rules' -> 0 -> 'discount'
+                 ELSE '[]'::jsonb END
+        ) d
+        WHERE LOWER(d ->> 'discount_type') = 'percentage'
+          AND (d ->> 'expire_date' IS NULL OR (d ->> 'expire_date')::date >= CURRENT_DATE)
+    ) disc ON TRUE
+),
+
+priced AS (
+    SELECT
+        offer_id,
+        classification,
+        price_type,
+        uom,
+        raw_price * (1 - discount_pct) * gst_mult AS price_inc_gst,
+        -- Fixed charges: Supply appears as per_unit/day and per_day/day (check #5) → both 365
+        CASE
+            WHEN price_type = 'per_day' OR lower(uom) IN ('day', 'days') THEN 365
+            WHEN price_type = 'per_month' THEN 12
+            WHEN price_type = 'per_year'  THEN 1
+            WHEN price_type = 'per_bill'  THEN 4       -- [F12] assumes quarterly billing (not seen in check #5)
+        END AS fixed_mult,
+        -- Demand: all observed units are 'kW d' / 'kVA d' (check #5) → 365
+        CASE
+            WHEN price_type = 'per_day' OR uom ~* '(\s|/)(d|day)$' THEN 365
+            WHEN price_type = 'per_year' THEN 1
+            ELSE 12                                    -- [F13] per kW per month fallback (not seen in check #5)
+        END AS demand_mult
+    FROM price_lines
+    WHERE raw_price IS NOT NULL
+),
+
+-- [F18] Demand: EVERY demand / capacity classification costed at max_demand_kw and summed.
+--       kVA treated as kW (power factor 1). Overstates (low-demand windows usually see lower kW).
+--       Per-classification AVG first (duplicates), then SUM across classifications.
+demand_by_offer AS (
+    SELECT offer_id, SUM(annual_per_kw) AS demand_annual_per_kw
+    FROM (
+        SELECT offer_id, classification, AVG(price_inc_gst * demand_mult) AS annual_per_kw
+        FROM priced
+        WHERE classification IN (
+            'High Demand', 'Low Demand', 'Anytime Demand', 'Capacity Charge',
+            'Network High Demand', 'Network Low Demand', 'Network Capacity Charge'
+        )
+        GROUP BY offer_id, classification
+    ) x
+    GROUP BY offer_id
+),
+
+-- [F17] Duplicate lines of the same classification (seasonal / multi-rule) are AVERAGED.
+-- Not costed (per scope): Network* energy/supply, LRET/SREC/SRES/ESC, Solar FIT, Controlled Load, Greenpower.
+offer_rates AS (
+    SELECT
+        p.offer_id,
+        AVG(p.price_inc_gst) FILTER (WHERE p.classification = 'Retail Peak')                       AS peak,
+        AVG(p.price_inc_gst) FILTER (WHERE p.classification = 'Retail Shoulder')                   AS shoulder,
+        AVG(p.price_inc_gst) FILTER (WHERE p.classification = 'Retail Off Peak')                   AS off_peak,
+        AVG(p.price_inc_gst) FILTER (WHERE p.classification IN ('Retail Anytime', 'General TOU'))  AS anytime,
+        AVG(p.price_inc_gst * p.fixed_mult) FILTER (WHERE p.classification = 'Supply')             AS supply_annual,
+        AVG(p.price_inc_gst * p.fixed_mult) FILTER (WHERE p.classification = 'Metering')           AS metering_annual,
+        MAX(d.demand_annual_per_kw)                                                                AS demand_annual_per_kw,
+        COUNT(*)                                                                                   AS n_lines
+    FROM priced p
+    LEFT JOIN demand_by_offer d ON d.offer_id = p.offer_id
+    GROUP BY p.offer_id
+),
+
+costed AS (
+    SELECT
+        o.offer_id,
+        o.plan_name,
+        o.offer_source,
+        o.raw_source,
+        o.retailer_id,
+        r.name AS retailer,
+        o.network_slug,
+        orr.peak, orr.shoulder, orr.off_peak, orr.anytime,
+        orr.supply_annual, orr.metering_annual,
+        orr.demand_annual_per_kw,
+        orr.n_lines,
+        u.max_demand_kw,
+        -- Energy (hardcoded TOU split per network, [F8]):
+        --   TOU:  kWh × (peak_share × peak + shoulder_share × shoulder + off_peak_share × off_peak)
+        --         missing shoulder → costed at peak (two-rate TOU: peak window covers the day)
+        --         missing off-peak → costed at shoulder, else peak
+        --   Flat: single rate stored as 'Retail Peak' (44 Evoenergy offers, check #5) → all kWh at that rate
+        CASE
+            WHEN u.invalid_shares THEN NULL
+            WHEN orr.peak IS NOT NULL AND (orr.off_peak IS NOT NULL OR orr.shoulder IS NOT NULL) THEN
+                u.annual_kwh * (
+                      u.peak_share     * orr.peak
+                    + u.shoulder_share * COALESCE(orr.shoulder, orr.peak)
+                    + u.off_peak_share * COALESCE(orr.off_peak, orr.shoulder, orr.peak)
+                )
+            WHEN COALESCE(orr.peak, orr.anytime) IS NOT NULL THEN
+                u.annual_kwh * COALESCE(orr.peak, orr.anytime)
+        END AS energy_annual            -- NULL = no costable energy rate, shares invalid, or usage unresolved
+    FROM offers o
+    JOIN offer_rates orr         ON orr.offer_id = o.offer_id
+    LEFT JOIN public.retailers r ON r.id = o.retailer_id
+    CROSS JOIN usage_resolved u
+),
+
+costed_total AS (
+    SELECT
+        c.*,
+        c.energy_annual
+          + COALESCE(c.supply_annual, 0)
+          + COALESCE(c.metering_annual, 0)                         -- toggle: remove line to exclude metering
+          + COALESCE(c.demand_annual_per_kw * c.max_demand_kw, 0)
+            AS annual_cost_inc_gst,
+        CASE
+            WHEN c.demand_annual_per_kw IS NOT NULL THEN 'demand'
+            WHEN c.peak IS NOT NULL AND (c.off_peak IS NOT NULL OR c.shoulder IS NOT NULL) THEN 'time_of_use'
+            ELSE 'flat'
+        END AS tariff_type,
+        array_remove(ARRAY[
+            CASE WHEN c.supply_annual IS NULL THEN 'no_supply_charge_found' END,
+            CASE WHEN c.demand_annual_per_kw IS NOT NULL AND c.max_demand_kw IS NULL THEN 'demand_not_costed' END
+        ]::text[], NULL::text) AS plan_warnings
+    FROM costed c
+)
+-- ═══════════ END SHARED COSTING BLOCK ═══════════
+,
+ranked AS (
+    SELECT
+        ct.*,
+        ROW_NUMBER() OVER (ORDER BY ct.annual_cost_inc_gst, ct.offer_id) AS plan_rank
+    FROM costed_total ct
+    CROSS JOIN params p
+    WHERE ct.annual_cost_inc_gst IS NOT NULL
+      AND (p.offer_source = 'all' OR ct.offer_source = p.offer_source)
+)
+SELECT
+    rk.plan_rank,
+    NULL::text                                                    AS plan_id,          -- deferred
+    rk.offer_source,
+    rk.retailer,
+    rk.plan_name,
+    rk.network_slug                                               AS network,          -- [F1]
+    rk.tariff_type,
+    ROUND(rk.annual_cost_inc_gst, 0)                              AS annual_cost_inc_gst,
+    ROUND((rk.annual_cost_inc_gst
+           / NULLIF(b.standing_offer_at_this_usage_inc_gst, 0) - 1) * 100, 1)
+                                                                  AS vs_standing_offer_pct,   -- [F11]
+    ROUND(rk.peak     * 100, 1)                                   AS peak_c_per_kwh_inc_gst,
+    ROUND(rk.off_peak * 100, 1)                                   AS off_peak_c_per_kwh_inc_gst,
+    ROUND(rk.shoulder * 100, 1)                                   AS shoulder_c_per_kwh_inc_gst,  -- not in contract
+    ROUND(rk.supply_annual / 365 * 100, 1)                        AS supply_c_per_day_inc_gst,
+    ROUND(rk.demand_annual_per_kw, 2)                             AS demand_per_kw_per_year_inc_gst, -- all demand lines summed [F18]
+    NULL::int                                                     AS contract_term_months,        -- deferred
+    NULL::numeric                                                 AS exit_fee_inc_gst,            -- deferred
+    NULL::text                                                    AS source_plan_id,              -- deferred
+    NULL::text                                                    AS switch_url,                  -- app layer
+    -- ── internal / debug (strip in API) ──
+    rk.plan_warnings                                              AS _plan_warnings,
+    rk.offer_id                                                   AS _offer_id,
+    rk.annual_cost_inc_gst                                        AS _cursor_cost,
+    rk.raw_source                                                 AS _raw_source,
+    rk.n_lines                                                    AS _n_price_lines
+FROM ranked rk
+CROSS JOIN params p
+LEFT JOIN benchmark_resolved b ON TRUE
+WHERE p.cursor_cost IS NULL
+   OR (rk.annual_cost_inc_gst, rk.offer_id) > (p.cursor_cost, p.cursor_offer_id)
+ORDER BY rk.plan_rank
+LIMIT (SELECT lim FROM params);

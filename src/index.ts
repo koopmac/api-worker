@@ -87,7 +87,6 @@ const EDGE_CACHE_SECONDS = 3600;
 const BROWSER_CACHE_SECONDS = 300;
 const METABASE_TIMEOUT_MS = 20_000;
 const DEFAULT_LIMIT = 10; // plans per page
-const COMMON_USAGE_KWH = 10000; // shared usage when several networks are merged
 const MAX_LIMIT = 50;
 const OFFER_SOURCES = ["all", "public", "termina_buying_group"] as const;
 
@@ -256,16 +255,6 @@ async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
 
   for (const net of skipped) {
     warnings.push({ code: "rates_not_available", message: `We don't have rates for ${net.name} yet.` });
-  }
-
-  // Plans from several networks are ranked against each other, so they must be costed at ONE usage.
-  // Each network's own default (its regulator reference) can differ: 10,000 kWh for DMO/VDO, 25,000 for the ACT.
-  if (targets.length > 1 && q.usage_kwh === undefined) {
-    q.usage_kwh = String(COMMON_USAGE_KWH);
-    warnings.push({
-      code: "common_usage",
-      message: `Plans from ${targets.length} networks are compared at ${COMMON_USAGE_KWH.toLocaleString("en-AU")} kWh a year, the regulators' usual small business reference. Pass usage_kwh for your site.`,
-    });
   }
 
   // 2. Cost every target network in parallel (5 queries each)
@@ -452,7 +441,7 @@ async function costNetwork(env: Env, q: RatesQuery, t: Target): Promise<NetworkR
     off_peak_share: u.off_peak_share ?? null,
     max_demand_kw: u.max_demand_kw ?? null,
     assumed,
-    // provided | regulator_reference (the benchmark's own usage) | small_business_default (10,000 kWh)
+    // provided | regulator_reference (10,000 kWh, the AER and ESC small business reference)
     default_basis: u.usage_default_basis ?? null,
   };
 
@@ -469,19 +458,25 @@ async function costNetwork(env: Env, q: RatesQuery, t: Target): Promise<NetworkR
       message: "Time-of-use split and demand are illustrative network defaults. Pass peak_share, shoulder_share and max_demand_kw for your site.",
     });
   }
-  if (usage.default_basis === "small_business_default") {
-    warnings.push({
-      code: "assumed_usage",
-      message: "There's no regulator reference usage for this network, so we've assumed 10,000 kWh a year. Pass usage_kwh for your site.",
-    });
-  }
-  const benchmark = benchRows[0] ?? null;
-  if (benchmark && benchmark.standing_offer_method === "not_available") {
-    warnings.push({
-      code: "benchmark_not_at_usage",
-      message: `The ${benchmark.name} is published at ${Number(benchmark.official_usage_kwh).toLocaleString("en-AU")} kWh only, so there's no standing offer figure at your usage.`,
-    });
-  }
+  // Benchmark: the regulated standing offer costed at the SAME usage as the plans. The regulator's own
+  // headline figure (at its own usage) sits under published_reference, for verification only.
+  const br = benchRows[0];
+  const benchmark = br
+    ? {
+        name: br.name,
+        regulator: br.regulator,
+        period: br.period,
+        annual_kwh: br.annual_kwh,
+        annual_cost_inc_gst: br.annual_cost_inc_gst,
+        supply_c_per_day_inc_gst: br.supply_c_per_day_inc_gst,
+        usage_c_per_kwh_inc_gst: br.usage_c_per_kwh_inc_gst,
+        published_reference:
+          br.published_annual_inc_gst == null
+            ? null
+            : { annual_inc_gst: br.published_annual_inc_gst, usage_kwh: br.published_usage_kwh },
+        source_url: br.source_url,
+      }
+    : null;
 
   return {
     key: t.key,

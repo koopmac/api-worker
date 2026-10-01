@@ -14,6 +14,32 @@ import Q_USAGE from "../sql/metabase/02_usage.sql";
 import Q_BENCHMARK from "../sql/metabase/03_benchmark.sql";
 import Q_PLANS from "../sql/metabase/04_plans.sql";
 import Q_STATS from "../sql/metabase/05_stats.sql";
+import POSTCODE_MAP from "../data/postcode-distributors.json";
+import DISTRIBUTOR_REGISTRY from "../data/distributors.json";
+
+// Postcode -> distributor slugs (built from CDR plan data by scripts/build-postcode-map.mjs).
+// Postcodes served by 2+ networks list all of them and are returned as ambiguous.
+const POSTCODES = POSTCODE_MAP as Record<string, string[]>;
+interface Distributor {
+  name: string;
+  state: string;
+  db_slug: string | null; // slug as derived from distributors.name in our DB (null = not matched in DB yet)
+  cdr_names: string[];
+}
+const DISTRIBUTORS = DISTRIBUTOR_REGISTRY as Record<string, Distributor>;
+const BY_DB_SLUG: Record<string, string> = Object.fromEntries(
+  Object.entries(DISTRIBUTORS)
+    .filter(([, d]) => d.db_slug)
+    .map(([slug, d]) => [d.db_slug as string, slug]),
+);
+// Accept our public slug ("evoenergy") or the DB-derived one ("evoenergy-electricity")
+const toPublicSlug = (s: string) => (DISTRIBUTORS[s] ? s : BY_DB_SLUG[s] ?? s);
+const toDbSlug = (s: string) => DISTRIBUTORS[s]?.db_slug ?? s;
+const networkFromRegistry = (slug: string) => ({
+  id: slug,
+  name: DISTRIBUTORS[slug]?.name ?? slug,
+  state: DISTRIBUTORS[slug]?.state ?? null,
+});
 
 interface RateLimiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
@@ -43,6 +69,7 @@ type Row = Record<string, unknown>;
 interface Warning {
   code: string;
   message: string;
+  network?: string; // set when the warning applies to one of several networks
 }
 
 class ApiError extends Error {
@@ -147,60 +174,183 @@ async function route(url: URL, env: Env): Promise<Response> {
 // ---------------------------------------------------------------------------
 async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
   const q = parseQuery(search);
-  const base = queryParams(q);
   const warnings: Warning[] = [];
+  const level = q.nmi ? "nmi" : q.postcode ? "postcode" : "distributor";
+  const input = q.nmi ?? q.postcode ?? q.distributor;
 
-  // 1. Location first: it decides whether the other four are worth running
-  const locRow = (await runQuery(env, "01_location", Q_LOCATION, base))[0];
-  if (!locRow) throw new ApiError(500, "internal_error", "Location lookup returned no row.");
+  // 1. Work out which network(s) to cost. NMI is resolved in SQL; postcode and distributor here.
+  let targets: Target[];
+  let skipped: { id: string; name: string; state: string | null }[] = [];
 
-  if (locRow._out_of_coverage === true) {
+  if (q.nmi) {
+    targets = [{ key: "nmi", nmi: q.nmi }];
+  } else {
+    let serving: string[];
+    const distributor = q.distributor ? toPublicSlug(q.distributor) : undefined;
+    if (q.postcode) {
+      const mapped = POSTCODES[q.postcode];
+      if (!mapped) {
+        throw new ApiError(422, "out_of_coverage", "We don't have an electricity network for that postcode.", { input });
+      }
+      if (distributor && !mapped.includes(distributor)) {
+        throw new ApiError(400, "distributor_postcode_mismatch", `${distributor} doesn't serve postcode ${q.postcode}.`, {
+          networks_serving_postcode: mapped,
+        });
+      }
+      serving = distributor ? [distributor] : mapped;
+    } else {
+      serving = [distributor as string];
+    }
+    // Networks we know about but haven't matched to a distributor in our database yet
+    skipped = serving.filter((s) => DISTRIBUTORS[s] && !DISTRIBUTORS[s].db_slug).map(networkFromRegistry);
+    targets = serving.filter((s) => !skipped.some((k) => k.id === s)).map((s) => ({ key: s, distributor: toDbSlug(s) }));
+  }
+
+  for (const net of skipped) {
+    warnings.push({ code: "rates_not_available", message: `We don't have rates for ${net.name} yet.` });
+  }
+
+  // 2. Cost every target network in parallel (5 queries each)
+  let results = await Promise.all(targets.map((t) => costNetwork(env, q, t)));
+
+  // An NMI can match more than one network in SQL: cost each of them separately
+  if (results.length === 1 && results[0].ambiguousIds.length > 1) {
+    targets = results[0].ambiguousIds.map((db) => ({ key: toPublicSlug(db), distributor: db }));
+    results = await Promise.all(targets.map((t) => costNetwork(env, q, t)));
+  }
+
+  if (results.some((r) => r.invalidShares)) {
+    throw new ApiError(400, "invalid_usage_shares", "peak_share + shoulder_share must not exceed 1.");
+  }
+
+  const covered = results.filter((r) => !r.outOfCoverage);
+  if (covered.length === 0 && skipped.length === 0) {
     throw new ApiError(
       422,
       "out_of_coverage",
       "We don't have an electricity network for that location. Check the distributor, postcode or NMI.",
-      { input: locRow.input },
+      { input },
     );
   }
 
-  const networks = (asArray(locRow.networks) as Row[]).map(({ _distributor_id, ...n }) => n);
-  const state = typeof locRow.state === "string" ? locRow.state : null;
-  const location = {
-    level: locRow.level,
-    input: locRow.input,
-    state,
-    postcode: locRow.postcode ?? null,
-    suburbs: asArray(locRow.suburbs),
-    networks,
-    ambiguous: locRow.ambiguous === true,
-  };
+  // 3. Location
+  const networks = [...covered.map((r) => r.network), ...skipped];
+  const states = [...new Set(networks.map((n) => n.state).filter(Boolean))];
+  const state = states.length === 1 ? (states[0] as string) : null;
+  const ambiguous = networks.length > 1;
+  const location = { level, input, state, postcode: q.postcode ?? null, suburbs: [], networks, ambiguous };
 
-  if (location.ambiguous) {
-    warnings.push({
+  if (ambiguous) {
+    warnings.unshift({
       code: "ambiguous_location",
-      message: `This location is served by ${networks.length} networks (${networks
-        .map((n) => n.id)
-        .join(", ")}). Pass distributor or nmi to choose one.`,
+      message: `${level === "postcode" ? `Postcode ${q.postcode}` : "This location"} is served by ${networks.length} networks (${networks
+        .map((n) => n.name)
+        .join(", ")}). Showing rates for all of them; each plan's network says which it applies to. Pass distributor or nmi to narrow it down.`,
     });
-    return json(envelope({ location, usage: null, benchmark: null, stats: null, plans: [], next_cursor: null, warnings, env, state }));
+  }
+  for (const r of covered) {
+    for (const w of r.warnings) {
+      warnings.push(ambiguous ? { code: w.code, message: `${r.network.name}: ${w.message}`, network: r.network.id } as Warning : w);
+    }
   }
 
-  // 2. Other blocks in parallel. Plans fetches limit + 1 to detect another page.
-  const [usageRows, benchRows, planRows, statsRows] = await Promise.all([
+  // 4. Merge plans across networks, cheapest first, and page with a per-network cursor
+  type Candidate = { row: Row; key: string; cost: number };
+  const candidates: Candidate[] = [];
+  for (const r of covered) {
+    for (const row of r.planRows) candidates.push({ row, key: r.key, cost: Number(row._cursor_cost) });
+  }
+  candidates.sort((x, y) => x.cost - y.cost || x.key.localeCompare(y.key) || Number(x.row._offer_id) - Number(y.row._offer_id));
+  const page = candidates.slice(0, q.limit);
+
+  const positions: Record<string, [string, string]> = { ...(q.cursor?.p ?? {}) };
+  for (const c of page) positions[c.key] = [String(c.row._cursor_cost), String(c.row._offer_id)];
+  const done = new Set(q.cursor?.d ?? []);
+  for (const r of covered) {
+    const fetched = r.planRows.length;
+    const emitted = page.filter((c) => c.key === r.key).length;
+    if (fetched <= q.limit && emitted === fetched) done.add(r.key); // nothing left beyond this page
+  }
+  const remaining = covered.some((r) => !done.has(r.key));
+  const offset = q.cursor?.o ?? 0;
+  const next_cursor = remaining ? encodeCursor({ o: offset + page.length, p: positions, d: [...done] }) : null;
+
+  const plans = page.map((c, i) => {
+    const out: Row = {};
+    for (const [k, v] of Object.entries(c.row)) if (!k.startsWith("_")) out[k] = v;
+    out.plan_rank = offset + i + 1;
+    if (typeof out.network === "string") out.network = toPublicSlug(out.network);
+    out.warnings = asArray(c.row._plan_warnings);
+    return out;
+  });
+
+  // 5. Per-network blocks. Top level carries them too when there is exactly one network.
+  const by_network = covered.map((r) => ({ network: r.network, usage: r.usage, benchmark: r.benchmark, stats: r.stats }));
+  const single = by_network.length === 1 ? by_network[0] : null;
+
+  return json(
+    envelope({
+      location,
+      usage: single?.usage ?? null,
+      benchmark: single?.benchmark ?? null,
+      stats: single?.stats ?? null,
+      by_network,
+      plans,
+      next_cursor,
+      warnings,
+      env,
+      state,
+    }),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// One network: run the five queries in parallel and shape the blocks
+// ---------------------------------------------------------------------------
+interface Target {
+  key: string; // public slug, or "nmi"
+  distributor?: string; // DB slug
+  nmi?: string;
+}
+
+interface NetworkResult {
+  key: string;
+  network: { id: string; name: string; state: string | null };
+  outOfCoverage: boolean;
+  ambiguousIds: string[]; // DB slugs when the SQL matched more than one network (NMI only)
+  invalidShares: boolean;
+  usage: unknown;
+  benchmark: unknown;
+  stats: unknown;
+  planRows: Row[];
+  warnings: Warning[];
+}
+
+async function costNetwork(env: Env, q: RatesQuery, t: Target): Promise<NetworkResult> {
+  const base = queryParams({ ...q, distributor: t.distributor, nmi: t.nmi, postcode: undefined });
+  const pos = q.cursor?.p?.[t.key];
+  const finished = q.cursor?.d?.includes(t.key);
+  const planParams = { ...base, lim: String(q.limit + 1), ...(pos ? { cursor_cost: pos[0], cursor_offer_id: pos[1] } : {}) };
+
+  const [locRows, usageRows, benchRows, planRows, statsRows] = await Promise.all([
+    runQuery(env, "01_location", Q_LOCATION, base),
     runQuery(env, "02_usage", Q_USAGE, base),
     runQuery(env, "03_benchmark", Q_BENCHMARK, base),
-    runQuery(env, "04_plans", Q_PLANS, { ...base, lim: String(q.limit + 1) }),
+    finished ? Promise.resolve([] as Row[]) : runQuery(env, "04_plans", Q_PLANS, planParams),
     runQuery(env, "05_stats", Q_STATS, base),
   ]);
 
-  // Usage
+  const loc = locRows[0] ?? {};
+  const sqlNetworks = asArray(loc.networks) as Row[];
+  const first = sqlNetworks[0] ?? {};
+  const id = toPublicSlug(String(first.id ?? t.key));
+  const network = {
+    id,
+    name: DISTRIBUTORS[id]?.name ?? String(first.name ?? id),
+    state: (typeof loc.state === "string" ? loc.state : null) ?? DISTRIBUTORS[id]?.state ?? null,
+  };
+
   const u = usageRows[0] ?? {};
-  if (u._invalid_shares === true) {
-    throw new ApiError(400, "invalid_usage_shares", "peak_share + shoulder_share must not exceed 1.", {
-      peak_share: u.peak_share,
-      shoulder_share: u.shoulder_share,
-    });
-  }
   const assumed = asArray(u.assumed) as string[];
   const usage = {
     annual_kwh: u.annual_kwh ?? null,
@@ -210,6 +360,8 @@ async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
     max_demand_kw: u.max_demand_kw ?? null,
     assumed,
   };
+
+  const warnings: Warning[] = [];
   if (usage.annual_kwh === null) {
     warnings.push({
       code: "no_default_usage",
@@ -222,8 +374,6 @@ async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
       message: "Time-of-use split and demand are illustrative network defaults. Pass peak_share, shoulder_share and max_demand_kw for your site.",
     });
   }
-
-  // Benchmark (zero rows = no regulator reference for this state)
   const benchmark = benchRows[0] ?? null;
   if (benchmark && usage.annual_kwh !== null && Number(benchmark.official_usage_kwh) !== Number(usage.annual_kwh)) {
     warnings.push({
@@ -232,21 +382,18 @@ async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
     });
   }
 
-  // Plans: strip internal fields, page with keyset cursor
-  const hasMore = planRows.length > q.limit;
-  const page = planRows.slice(0, q.limit);
-  const last = page[page.length - 1];
-  const next_cursor = hasMore && last ? encodeCursor(String(last._cursor_cost), String(last._offer_id)) : null;
-  const plans = page.map((p) => {
-    const out: Row = {};
-    for (const [k, v] of Object.entries(p)) if (!k.startsWith("_")) out[k] = v;
-    out.warnings = asArray(p._plan_warnings);
-    return out;
-  });
-
-  const stats = statsRows[0] ?? null;
-
-  return json(envelope({ location, usage, benchmark, stats, plans, next_cursor, warnings, env, state }));
+  return {
+    key: t.key,
+    network,
+    outOfCoverage: loc._out_of_coverage === true,
+    ambiguousIds: loc.ambiguous === true ? sqlNetworks.map((n) => String(n.id)) : [],
+    invalidShares: u._invalid_shares === true,
+    usage,
+    benchmark,
+    stats: statsRows[0] ?? null,
+    planRows,
+    warnings,
+  };
 }
 
 function envelope(b: {
@@ -254,6 +401,7 @@ function envelope(b: {
   usage: unknown;
   benchmark: unknown;
   stats: unknown;
+  by_network: unknown[];
   plans: unknown[];
   next_cursor: string | null;
   warnings: Warning[];
@@ -265,6 +413,7 @@ function envelope(b: {
     usage: b.usage,
     benchmark: b.benchmark,
     stats: b.stats,
+    by_network: b.by_network,
     plans: b.plans,
     next_cursor: b.next_cursor,
     warnings: b.warnings,
@@ -294,7 +443,7 @@ interface RatesQuery {
   max_demand_kw?: string;
   offer_source: string;
   limit: number;
-  cursor?: { cost: string; offerId: string };
+  cursor?: CursorState;
 }
 
 function parseQuery(p: URLSearchParams): RatesQuery {
@@ -366,22 +515,36 @@ function queryParams(q: RatesQuery): Record<string, string> {
     max_demand_kw: q.max_demand_kw,
     offer_source: q.offer_source,
     lim: String(q.limit),
-    cursor_cost: q.cursor?.cost,
-    cursor_offer_id: q.cursor?.offerId,
   };
   return Object.fromEntries(Object.entries(all).filter(([, v]) => v !== undefined)) as Record<string, string>;
 }
 
-// Keyset cursor: base64url of [annual_cost_inc_gst (exact text), offer_id]
-function encodeCursor(cost: string, offerId: string): string {
-  return btoa(JSON.stringify([cost, offerId])).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+// Paging cursor, base64url JSON. Plans from several networks are merged, so it keeps a keyset position
+// per network: p = { network: [annual_cost_inc_gst (exact text), offer_id] }, d = networks with nothing left,
+// o = how many plans were already returned (for plan_rank).
+interface CursorState {
+  o: number;
+  p: Record<string, [string, string]>;
+  d: string[];
 }
 
-function decodeCursor(c: string): { cost: string; offerId: string } {
+function encodeCursor(c: CursorState): string {
+  return btoa(JSON.stringify(c)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function decodeCursor(raw: string): CursorState {
   try {
-    const padded = c.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((c.length + 3) % 4);
-    const [cost, offerId] = JSON.parse(atob(padded));
-    if (/^-?\d+(\.\d+)?$/.test(cost) && /^\d{1,19}$/.test(offerId)) return { cost, offerId };
+    const padded = raw.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((raw.length + 3) % 4);
+    const c = JSON.parse(atob(padded)) as CursorState;
+    const keyOk = (k: string) => /^[a-z0-9-]{2,40}$/.test(k);
+    const valid =
+      Number.isInteger(c.o) && c.o >= 0 &&
+      c.p && typeof c.p === "object" &&
+      Object.entries(c.p).every(
+        ([k, v]) => keyOk(k) && Array.isArray(v) && /^-?\d+(\.\d+)?$/.test(v[0]) && /^\d{1,19}$/.test(v[1]),
+      ) &&
+      Array.isArray(c.d) && c.d.every(keyOk);
+    if (valid) return c;
   } catch {
     /* fall through */
   }

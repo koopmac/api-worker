@@ -1,0 +1,2549 @@
+{
+ "adelaide": {
+  "name": "Adelaide",
+  "state": "SA",
+  "basis": "ABS Greater Capital City area 4GADE",
+  "aliases": [],
+  "postcodes": [
+   "5000",
+   "5006",
+   "5007",
+   "5008",
+   "5009",
+   "5010",
+   "5011",
+   "5012",
+   "5013",
+   "5014",
+   "5015",
+   "5016",
+   "5017",
+   "5018",
+   "5019",
+   "5020",
+   "5021",
+   "5022",
+   "5023",
+   "5024",
+   "5025",
+   "5031",
+   "5032",
+   "5033",
+   "5034",
+   "5035",
+   "5037",
+   "5038",
+   "5039",
+   "5040",
+   "5041",
+   "5042",
+   "5043",
+   "5044",
+   "5045",
+   "5046",
+   "5047",
+   "5048",
+   "5049",
+   "5050",
+   "5051",
+   "5052",
+   "5061",
+   "5062",
+   "5063",
+   "5064",
+   "5065",
+   "5066",
+   "5067",
+   "5068",
+   "5069",
+   "5070",
+   "5072",
+   "5073",
+   "5074",
+   "5075",
+   "5076",
+   "5081",
+   "5082",
+   "5083",
+   "5084",
+   "5085",
+   "5086",
+   "5087",
+   "5088",
+   "5089",
+   "5090",
+   "5091",
+   "5092",
+   "5093",
+   "5094",
+   "5095",
+   "5096",
+   "5097",
+   "5098",
+   "5106",
+   "5107",
+   "5108",
+   "5109",
+   "5110",
+   "5111",
+   "5112",
+   "5113",
+   "5114",
+   "5115",
+   "5116",
+   "5117",
+   "5118",
+   "5120",
+   "5121",
+   "5125",
+   "5126",
+   "5127",
+   "5131",
+   "5132",
+   "5133",
+   "5134",
+   "5136",
+   "5137",
+   "5138",
+   "5139",
+   "5140",
+   "5141",
+   "5142",
+   "5144",
+   "5150",
+   "5151",
+   "5152",
+   "5153",
+   "5154",
+   "5155",
+   "5156",
+   "5157",
+   "5158",
+   "5159",
+   "5160",
+   "5161",
+   "5162",
+   "5163",
+   "5164",
+   "5165",
+   "5166",
+   "5167",
+   "5168",
+   "5169",
+   "5170",
+   "5171",
+   "5172",
+   "5173",
+   "5174",
+   "5201",
+   "5231",
+   "5232",
+   "5233",
+   "5234",
+   "5240",
+   "5241",
+   "5242",
+   "5243",
+   "5244",
+   "5245",
+   "5250",
+   "5251",
+   "5252",
+   "5371",
+   "5501",
+   "5950"
+  ],
+  "networks": {
+   "sa-power-networks": 147
+  },
+  "fringe_networks": {}
+ },
+ "airlie-beach-cannonvale": {
+  "name": "Airlie Beach - Cannonvale",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Airlie Beach - Cannonvale",
+  "aliases": [
+   "airlie-beach",
+   "cannonvale"
+  ],
+  "postcodes": [
+   "4802"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "albany": {
+  "name": "Albany",
+  "state": "WA",
+  "basis": "ABS Significant Urban Area Albany",
+  "aliases": [],
+  "postcodes": [
+   "6330"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "albury-wodonga": {
+  "name": "Albury - Wodonga",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Albury - Wodonga",
+  "aliases": [
+   "albury",
+   "wodonga"
+  ],
+  "postcodes": [
+   "2640",
+   "2641",
+   "3690",
+   "3691"
+  ],
+  "networks": {
+   "essential-energy": 3,
+   "ausnet-services": 2
+  },
+  "fringe_networks": {}
+ },
+ "alice-springs": {
+  "name": "Alice Springs",
+  "state": "NT",
+  "basis": "ABS Significant Urban Area Alice Springs",
+  "aliases": [],
+  "postcodes": [
+   "0870",
+   "0873",
+   "0874",
+   "0875"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "armidale": {
+  "name": "Armidale",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Armidale",
+  "aliases": [],
+  "postcodes": [
+   "2350"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "bacchus-marsh": {
+  "name": "Bacchus Marsh",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Bacchus Marsh",
+  "aliases": [],
+  "postcodes": [
+   "3340"
+  ],
+  "networks": {
+   "jemena": 1,
+   "powercor": 1
+  },
+  "fringe_networks": {}
+ },
+ "bairnsdale": {
+  "name": "Bairnsdale",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Bairnsdale",
+  "aliases": [],
+  "postcodes": [
+   "3875"
+  ],
+  "networks": {
+   "ausnet-services": 1
+  },
+  "fringe_networks": {}
+ },
+ "ballarat": {
+  "name": "Ballarat",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Ballarat",
+  "aliases": [],
+  "postcodes": [
+   "3350",
+   "3355",
+   "3356",
+   "3357",
+   "3358"
+  ],
+  "networks": {
+   "powercor": 5
+  },
+  "fringe_networks": {}
+ },
+ "ballina": {
+  "name": "Ballina",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Ballina",
+  "aliases": [],
+  "postcodes": [
+   "2477",
+   "2478"
+  ],
+  "networks": {
+   "essential-energy": 2
+  },
+  "fringe_networks": {}
+ },
+ "batemans-bay": {
+  "name": "Batemans Bay",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Batemans Bay",
+  "aliases": [],
+  "postcodes": [
+   "2536"
+  ],
+  "networks": {
+   "endeavour-energy": 1,
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "bathurst": {
+  "name": "Bathurst",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Bathurst",
+  "aliases": [],
+  "postcodes": [
+   "2795"
+  ],
+  "networks": {
+   "endeavour-energy": 1,
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "bendigo": {
+  "name": "Bendigo",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Bendigo",
+  "aliases": [],
+  "postcodes": [
+   "3550",
+   "3551",
+   "3555",
+   "3556"
+  ],
+  "networks": {
+   "powercor": 4
+  },
+  "fringe_networks": {}
+ },
+ "bowral-mittagong": {
+  "name": "Bowral - Mittagong",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Bowral - Mittagong",
+  "aliases": [
+   "bowral",
+   "mittagong"
+  ],
+  "postcodes": [
+   "2575",
+   "2576"
+  ],
+  "networks": {
+   "endeavour-energy": 2
+  },
+  "fringe_networks": {}
+ },
+ "brisbane": {
+  "name": "Brisbane",
+  "state": "QLD",
+  "basis": "ABS Greater Capital City area 3GBRI",
+  "aliases": [],
+  "postcodes": [
+   "4000",
+   "4005",
+   "4006",
+   "4007",
+   "4008",
+   "4009",
+   "4010",
+   "4011",
+   "4012",
+   "4013",
+   "4014",
+   "4017",
+   "4018",
+   "4019",
+   "4020",
+   "4021",
+   "4022",
+   "4025",
+   "4030",
+   "4031",
+   "4032",
+   "4034",
+   "4035",
+   "4036",
+   "4037",
+   "4051",
+   "4053",
+   "4054",
+   "4055",
+   "4059",
+   "4060",
+   "4061",
+   "4064",
+   "4065",
+   "4066",
+   "4067",
+   "4068",
+   "4069",
+   "4070",
+   "4073",
+   "4074",
+   "4075",
+   "4076",
+   "4077",
+   "4078",
+   "4101",
+   "4102",
+   "4103",
+   "4104",
+   "4105",
+   "4106",
+   "4107",
+   "4108",
+   "4109",
+   "4110",
+   "4111",
+   "4112",
+   "4113",
+   "4114",
+   "4115",
+   "4116",
+   "4117",
+   "4118",
+   "4119",
+   "4120",
+   "4121",
+   "4122",
+   "4123",
+   "4124",
+   "4125",
+   "4127",
+   "4128",
+   "4129",
+   "4130",
+   "4131",
+   "4132",
+   "4133",
+   "4151",
+   "4152",
+   "4153",
+   "4154",
+   "4155",
+   "4156",
+   "4157",
+   "4158",
+   "4159",
+   "4160",
+   "4161",
+   "4163",
+   "4164",
+   "4165",
+   "4169",
+   "4170",
+   "4171",
+   "4172",
+   "4173",
+   "4174",
+   "4178",
+   "4179",
+   "4183",
+   "4184",
+   "4205",
+   "4207",
+   "4280",
+   "4285",
+   "4287",
+   "4300",
+   "4301",
+   "4303",
+   "4304",
+   "4305",
+   "4306",
+   "4307",
+   "4309",
+   "4310",
+   "4311",
+   "4312",
+   "4313",
+   "4340",
+   "4341",
+   "4342",
+   "4346",
+   "4500",
+   "4501",
+   "4502",
+   "4503",
+   "4504",
+   "4505",
+   "4506",
+   "4507",
+   "4508",
+   "4509",
+   "4510",
+   "4511",
+   "4512",
+   "4514",
+   "4515",
+   "4516",
+   "4520",
+   "4521"
+  ],
+  "networks": {
+   "energex": 139
+  },
+  "fringe_networks": {
+   "ergon-energy": 4
+  }
+ },
+ "broken-hill": {
+  "name": "Broken Hill",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Broken Hill",
+  "aliases": [],
+  "postcodes": [
+   "2880"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "broome": {
+  "name": "Broome",
+  "state": "WA",
+  "basis": "ABS Significant Urban Area Broome",
+  "aliases": [],
+  "postcodes": [
+   "6725",
+   "6726"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "bunbury": {
+  "name": "Bunbury",
+  "state": "WA",
+  "basis": "ABS Significant Urban Area Bunbury",
+  "aliases": [],
+  "postcodes": [
+   "6229",
+   "6230",
+   "6232",
+   "6233"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "bundaberg": {
+  "name": "Bundaberg",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Bundaberg",
+  "aliases": [],
+  "postcodes": [
+   "4670"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "burnie-somerset": {
+  "name": "Burnie - Somerset",
+  "state": "TAS",
+  "basis": "ABS Significant Urban Area Burnie - Somerset",
+  "aliases": [
+   "burnie",
+   "somerset"
+  ],
+  "postcodes": [
+   "7320",
+   "7322",
+   "7325"
+  ],
+  "networks": {
+   "tasnetworks": 3
+  },
+  "fringe_networks": {}
+ },
+ "busselton": {
+  "name": "Busselton",
+  "state": "WA",
+  "basis": "ABS Significant Urban Area Busselton",
+  "aliases": [],
+  "postcodes": [
+   "6280",
+   "6281",
+   "6282"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "byron-bay": {
+  "name": "Byron Bay",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Byron Bay",
+  "aliases": [],
+  "postcodes": [
+   "2481"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "cairns": {
+  "name": "Cairns",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Cairns",
+  "aliases": [],
+  "postcodes": [
+   "4868",
+   "4869",
+   "4870",
+   "4878",
+   "4879"
+  ],
+  "networks": {
+   "ergon-energy": 5
+  },
+  "fringe_networks": {}
+ },
+ "camden-haven": {
+  "name": "Camden Haven",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Camden Haven",
+  "aliases": [],
+  "postcodes": [
+   "2439",
+   "2443",
+   "2445"
+  ],
+  "networks": {
+   "essential-energy": 3
+  },
+  "fringe_networks": {}
+ },
+ "canberra": {
+  "name": "Canberra",
+  "state": "ACT",
+  "basis": "ABS Greater Capital City area 8ACTE",
+  "aliases": [],
+  "postcodes": [
+   "2600",
+   "2601",
+   "2602",
+   "2603",
+   "2604",
+   "2605",
+   "2606",
+   "2607",
+   "2609",
+   "2611",
+   "2612",
+   "2614",
+   "2615",
+   "2617",
+   "2618",
+   "2900",
+   "2902",
+   "2903",
+   "2904",
+   "2905",
+   "2906",
+   "2911",
+   "2912",
+   "2913",
+   "2914"
+  ],
+  "networks": {
+   "evoenergy": 25
+  },
+  "fringe_networks": {
+   "essential-energy": 2
+  }
+ },
+ "castlemaine": {
+  "name": "Castlemaine",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Castlemaine",
+  "aliases": [],
+  "postcodes": [
+   "3450",
+   "3451"
+  ],
+  "networks": {
+   "powercor": 2
+  },
+  "fringe_networks": {}
+ },
+ "central-coast": {
+  "name": "Central Coast",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Central Coast",
+  "aliases": [],
+  "postcodes": [
+   "2250",
+   "2251",
+   "2256",
+   "2257",
+   "2258",
+   "2259",
+   "2260",
+   "2261",
+   "2262",
+   "2263"
+  ],
+  "networks": {
+   "ausgrid": 10,
+   "endeavour-energy": 2
+  },
+  "fringe_networks": {}
+ },
+ "coffs-harbour": {
+  "name": "Coffs Harbour",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Coffs Harbour",
+  "aliases": [],
+  "postcodes": [
+   "2450",
+   "2452",
+   "2456"
+  ],
+  "networks": {
+   "essential-energy": 3
+  },
+  "fringe_networks": {}
+ },
+ "colac": {
+  "name": "Colac",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Colac",
+  "aliases": [],
+  "postcodes": [
+   "3250"
+  ],
+  "networks": {
+   "powercor": 1
+  },
+  "fringe_networks": {}
+ },
+ "darwin": {
+  "name": "Darwin",
+  "state": "NT",
+  "basis": "ABS Greater Capital City area 7GDAR",
+  "aliases": [],
+  "postcodes": [
+   "0800",
+   "0810",
+   "0812",
+   "0820",
+   "0828",
+   "0829",
+   "0830",
+   "0832",
+   "0834",
+   "0835",
+   "0836",
+   "0837",
+   "0838",
+   "0839",
+   "0841"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "devonport": {
+  "name": "Devonport",
+  "state": "TAS",
+  "basis": "ABS Significant Urban Area Devonport",
+  "aliases": [],
+  "postcodes": [
+   "7310"
+  ],
+  "networks": {
+   "tasnetworks": 1
+  },
+  "fringe_networks": {}
+ },
+ "dubbo": {
+  "name": "Dubbo",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Dubbo",
+  "aliases": [],
+  "postcodes": [
+   "2830"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "echuca-moama": {
+  "name": "Echuca - Moama",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Echuca - Moama",
+  "aliases": [
+   "echuca",
+   "moama"
+  ],
+  "postcodes": [
+   "2731",
+   "3564"
+  ],
+  "networks": {
+   "essential-energy": 1,
+   "powercor": 1
+  },
+  "fringe_networks": {}
+ },
+ "emerald": {
+  "name": "Emerald",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Emerald",
+  "aliases": [],
+  "postcodes": [
+   "4720"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "forster-tuncurry": {
+  "name": "Forster - Tuncurry",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Forster - Tuncurry",
+  "aliases": [
+   "forster",
+   "tuncurry"
+  ],
+  "postcodes": [
+   "2428"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "geelong": {
+  "name": "Geelong",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Geelong",
+  "aliases": [],
+  "postcodes": [
+   "3212",
+   "3213",
+   "3214",
+   "3215",
+   "3216",
+   "3217",
+   "3218",
+   "3219",
+   "3220",
+   "3222",
+   "3224",
+   "3225",
+   "3226",
+   "3227",
+   "3228"
+  ],
+  "networks": {
+   "powercor": 15
+  },
+  "fringe_networks": {}
+ },
+ "geraldton": {
+  "name": "Geraldton",
+  "state": "WA",
+  "basis": "ABS Significant Urban Area Geraldton",
+  "aliases": [],
+  "postcodes": [
+   "6530"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "gisborne": {
+  "name": "Gisborne",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Gisborne",
+  "aliases": [],
+  "postcodes": [
+   "3431",
+   "3437",
+   "3438",
+   "3440",
+   "3441"
+  ],
+  "networks": {
+   "powercor": 5,
+   "jemena": 2
+  },
+  "fringe_networks": {}
+ },
+ "gladstone": {
+  "name": "Gladstone",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Gladstone",
+  "aliases": [],
+  "postcodes": [
+   "4680"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "gold-coast-tweed-heads": {
+  "name": "Gold Coast - Tweed Heads",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Gold Coast - Tweed Heads",
+  "aliases": [
+   "gold-coast",
+   "tweed-heads"
+  ],
+  "postcodes": [
+   "2485",
+   "2486",
+   "2487",
+   "2488",
+   "2489",
+   "4208",
+   "4209",
+   "4210",
+   "4211",
+   "4212",
+   "4213",
+   "4214",
+   "4215",
+   "4216",
+   "4217",
+   "4218",
+   "4220",
+   "4221",
+   "4223",
+   "4224",
+   "4225",
+   "4226",
+   "4227",
+   "4228"
+  ],
+  "networks": {
+   "energex": 19,
+   "essential-energy": 5
+  },
+  "fringe_networks": {}
+ },
+ "goulburn": {
+  "name": "Goulburn",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Goulburn",
+  "aliases": [],
+  "postcodes": [
+   "2580"
+  ],
+  "networks": {
+   "endeavour-energy": 1,
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "grafton": {
+  "name": "Grafton",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Grafton",
+  "aliases": [],
+  "postcodes": [
+   "2460"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "griffith": {
+  "name": "Griffith",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Griffith",
+  "aliases": [],
+  "postcodes": [
+   "2680"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "hervey-bay": {
+  "name": "Hervey Bay",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Hervey Bay",
+  "aliases": [],
+  "postcodes": [
+   "4655"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "hobart": {
+  "name": "Hobart",
+  "state": "TAS",
+  "basis": "ABS Greater Capital City area 6GHOB",
+  "aliases": [],
+  "postcodes": [
+   "7000",
+   "7004",
+   "7005",
+   "7007",
+   "7008",
+   "7009",
+   "7010",
+   "7011",
+   "7012",
+   "7015",
+   "7016",
+   "7017",
+   "7018",
+   "7019",
+   "7020",
+   "7021",
+   "7022",
+   "7023",
+   "7024",
+   "7025",
+   "7030",
+   "7050",
+   "7052",
+   "7053",
+   "7054",
+   "7055",
+   "7170",
+   "7171",
+   "7172",
+   "7173",
+   "7174",
+   "7175",
+   "7176",
+   "7177"
+  ],
+  "networks": {
+   "tasnetworks": 34
+  },
+  "fringe_networks": {}
+ },
+ "horsham": {
+  "name": "Horsham",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Horsham",
+  "aliases": [],
+  "postcodes": [
+   "3400"
+  ],
+  "networks": {
+   "powercor": 1
+  },
+  "fringe_networks": {}
+ },
+ "kalgoorlie-boulder": {
+  "name": "Kalgoorlie - Boulder",
+  "state": "WA",
+  "basis": "ABS Significant Urban Area Kalgoorlie - Boulder",
+  "aliases": [
+   "boulder",
+   "kalgoorlie"
+  ],
+  "postcodes": [
+   "6430",
+   "6432"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "karratha": {
+  "name": "Karratha",
+  "state": "WA",
+  "basis": "ABS Significant Urban Area Karratha",
+  "aliases": [],
+  "postcodes": [
+   "6714"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "kingaroy": {
+  "name": "Kingaroy",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Kingaroy",
+  "aliases": [],
+  "postcodes": [
+   "4610"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "launceston": {
+  "name": "Launceston",
+  "state": "TAS",
+  "basis": "ABS Significant Urban Area Launceston",
+  "aliases": [],
+  "postcodes": [
+   "7248",
+   "7249",
+   "7250",
+   "7258",
+   "7277",
+   "7290",
+   "7291"
+  ],
+  "networks": {
+   "tasnetworks": 7
+  },
+  "fringe_networks": {}
+ },
+ "lismore": {
+  "name": "Lismore",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Lismore",
+  "aliases": [],
+  "postcodes": [
+   "2480"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "lithgow": {
+  "name": "Lithgow",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Lithgow",
+  "aliases": [],
+  "postcodes": [
+   "2790"
+  ],
+  "networks": {
+   "endeavour-energy": 1,
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "mackay": {
+  "name": "Mackay",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Mackay",
+  "aliases": [],
+  "postcodes": [
+   "4740",
+   "4750"
+  ],
+  "networks": {
+   "ergon-energy": 2
+  },
+  "fringe_networks": {}
+ },
+ "maryborough": {
+  "name": "Maryborough",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Maryborough",
+  "aliases": [],
+  "postcodes": [
+   "4650"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "medowie": {
+  "name": "Medowie",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Medowie",
+  "aliases": [],
+  "postcodes": [
+   "2318"
+  ],
+  "networks": {
+   "ausgrid": 1
+  },
+  "fringe_networks": {}
+ },
+ "melbourne": {
+  "name": "Melbourne",
+  "state": "VIC",
+  "basis": "ABS Greater Capital City area 2GMEL",
+  "aliases": [],
+  "postcodes": [
+   "3000",
+   "3002",
+   "3003",
+   "3004",
+   "3006",
+   "3008",
+   "3011",
+   "3012",
+   "3013",
+   "3015",
+   "3016",
+   "3018",
+   "3019",
+   "3020",
+   "3021",
+   "3022",
+   "3023",
+   "3024",
+   "3025",
+   "3026",
+   "3027",
+   "3028",
+   "3029",
+   "3030",
+   "3031",
+   "3032",
+   "3033",
+   "3034",
+   "3036",
+   "3037",
+   "3038",
+   "3039",
+   "3040",
+   "3041",
+   "3042",
+   "3043",
+   "3044",
+   "3045",
+   "3046",
+   "3047",
+   "3048",
+   "3049",
+   "3051",
+   "3052",
+   "3053",
+   "3054",
+   "3055",
+   "3056",
+   "3057",
+   "3058",
+   "3059",
+   "3060",
+   "3061",
+   "3062",
+   "3063",
+   "3064",
+   "3065",
+   "3066",
+   "3067",
+   "3068",
+   "3070",
+   "3071",
+   "3072",
+   "3073",
+   "3074",
+   "3075",
+   "3076",
+   "3078",
+   "3079",
+   "3081",
+   "3082",
+   "3083",
+   "3084",
+   "3085",
+   "3087",
+   "3088",
+   "3089",
+   "3090",
+   "3091",
+   "3093",
+   "3094",
+   "3095",
+   "3096",
+   "3097",
+   "3099",
+   "3101",
+   "3102",
+   "3103",
+   "3104",
+   "3105",
+   "3106",
+   "3107",
+   "3108",
+   "3109",
+   "3111",
+   "3113",
+   "3114",
+   "3115",
+   "3116",
+   "3121",
+   "3122",
+   "3123",
+   "3124",
+   "3125",
+   "3126",
+   "3127",
+   "3128",
+   "3129",
+   "3130",
+   "3131",
+   "3132",
+   "3133",
+   "3134",
+   "3135",
+   "3136",
+   "3137",
+   "3138",
+   "3139",
+   "3140",
+   "3141",
+   "3142",
+   "3143",
+   "3144",
+   "3145",
+   "3146",
+   "3147",
+   "3148",
+   "3149",
+   "3150",
+   "3151",
+   "3152",
+   "3153",
+   "3154",
+   "3155",
+   "3156",
+   "3158",
+   "3159",
+   "3160",
+   "3161",
+   "3162",
+   "3163",
+   "3165",
+   "3166",
+   "3167",
+   "3168",
+   "3169",
+   "3170",
+   "3171",
+   "3172",
+   "3173",
+   "3174",
+   "3175",
+   "3177",
+   "3178",
+   "3179",
+   "3180",
+   "3181",
+   "3182",
+   "3183",
+   "3184",
+   "3185",
+   "3186",
+   "3187",
+   "3188",
+   "3189",
+   "3190",
+   "3191",
+   "3192",
+   "3193",
+   "3194",
+   "3195",
+   "3196",
+   "3197",
+   "3198",
+   "3199",
+   "3200",
+   "3201",
+   "3202",
+   "3204",
+   "3205",
+   "3206",
+   "3207",
+   "3211",
+   "3335",
+   "3336",
+   "3337",
+   "3338",
+   "3340",
+   "3427",
+   "3428",
+   "3429",
+   "3430",
+   "3431",
+   "3432",
+   "3433",
+   "3434",
+   "3435",
+   "3437",
+   "3438",
+   "3440",
+   "3441",
+   "3750",
+   "3751",
+   "3752",
+   "3753",
+   "3754",
+   "3755",
+   "3756",
+   "3757",
+   "3758",
+   "3759",
+   "3760",
+   "3761",
+   "3762",
+   "3763",
+   "3765",
+   "3766",
+   "3767",
+   "3770",
+   "3775",
+   "3777",
+   "3781",
+   "3782",
+   "3783",
+   "3785",
+   "3786",
+   "3787",
+   "3788",
+   "3789",
+   "3791",
+   "3792",
+   "3793",
+   "3795",
+   "3796",
+   "3797",
+   "3799",
+   "3802",
+   "3803",
+   "3804",
+   "3805",
+   "3806",
+   "3807",
+   "3808",
+   "3809",
+   "3810",
+   "3812",
+   "3813",
+   "3814",
+   "3815",
+   "3910",
+   "3911",
+   "3912",
+   "3913",
+   "3915",
+   "3916",
+   "3918",
+   "3919",
+   "3920",
+   "3926",
+   "3927",
+   "3928",
+   "3929",
+   "3930",
+   "3931",
+   "3933",
+   "3934",
+   "3936",
+   "3937",
+   "3938",
+   "3939",
+   "3940",
+   "3941",
+   "3942",
+   "3943",
+   "3944",
+   "3975",
+   "3976",
+   "3977",
+   "3978",
+   "3980",
+   "3981"
+  ],
+  "networks": {
+   "ausnet-services": 105,
+   "united-energy": 98,
+   "jemena": 61,
+   "citipower": 45,
+   "powercor": 41
+  },
+  "fringe_networks": {}
+ },
+ "mildura-buronga": {
+  "name": "Mildura - Buronga",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Mildura - Buronga",
+  "aliases": [
+   "buronga",
+   "mildura"
+  ],
+  "postcodes": [
+   "2717",
+   "2738",
+   "2739",
+   "3498",
+   "3500",
+   "3505"
+  ],
+  "networks": {
+   "essential-energy": 3,
+   "powercor": 3
+  },
+  "fringe_networks": {}
+ },
+ "moe-newborough": {
+  "name": "Moe - Newborough",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Moe - Newborough",
+  "aliases": [
+   "moe",
+   "newborough"
+  ],
+  "postcodes": [
+   "3825",
+   "3854",
+   "3856"
+  ],
+  "networks": {
+   "ausnet-services": 3
+  },
+  "fringe_networks": {}
+ },
+ "morisset-cooranbong": {
+  "name": "Morisset - Cooranbong",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Morisset - Cooranbong",
+  "aliases": [
+   "cooranbong",
+   "morisset"
+  ],
+  "postcodes": [
+   "2264",
+   "2265"
+  ],
+  "networks": {
+   "ausgrid": 2
+  },
+  "fringe_networks": {}
+ },
+ "mount-gambier": {
+  "name": "Mount Gambier",
+  "state": "SA",
+  "basis": "ABS Significant Urban Area Mount Gambier",
+  "aliases": [],
+  "postcodes": [
+   "5290"
+  ],
+  "networks": {
+   "sa-power-networks": 1
+  },
+  "fringe_networks": {}
+ },
+ "mount-isa": {
+  "name": "Mount Isa",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Mount Isa",
+  "aliases": [],
+  "postcodes": [
+   "4825"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "murray-bridge": {
+  "name": "Murray Bridge",
+  "state": "SA",
+  "basis": "ABS Significant Urban Area Murray Bridge",
+  "aliases": [],
+  "postcodes": [
+   "5253"
+  ],
+  "networks": {
+   "sa-power-networks": 1
+  },
+  "fringe_networks": {}
+ },
+ "muswellbrook": {
+  "name": "Muswellbrook",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Muswellbrook",
+  "aliases": [],
+  "postcodes": [
+   "2333"
+  ],
+  "networks": {
+   "ausgrid": 1
+  },
+  "fringe_networks": {}
+ },
+ "nelson-bay": {
+  "name": "Nelson Bay",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Nelson Bay",
+  "aliases": [],
+  "postcodes": [
+   "2315",
+   "2316",
+   "2317"
+  ],
+  "networks": {
+   "ausgrid": 3
+  },
+  "fringe_networks": {}
+ },
+ "newcastle-maitland": {
+  "name": "Newcastle - Maitland",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Newcastle - Maitland",
+  "aliases": [
+   "maitland",
+   "newcastle"
+  ],
+  "postcodes": [
+   "2267",
+   "2278",
+   "2280",
+   "2281",
+   "2282",
+   "2283",
+   "2284",
+   "2285",
+   "2286",
+   "2287",
+   "2289",
+   "2290",
+   "2291",
+   "2292",
+   "2293",
+   "2294",
+   "2295",
+   "2296",
+   "2297",
+   "2298",
+   "2299",
+   "2300",
+   "2302",
+   "2303",
+   "2304",
+   "2305",
+   "2306",
+   "2307",
+   "2308",
+   "2320",
+   "2321",
+   "2322",
+   "2323",
+   "2325",
+   "2326",
+   "2327"
+  ],
+  "networks": {
+   "ausgrid": 36,
+   "endeavour-energy": 4
+  },
+  "fringe_networks": {
+   "essential-energy": 2
+  }
+ },
+ "nowra-bomaderry": {
+  "name": "Nowra - Bomaderry",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Nowra - Bomaderry",
+  "aliases": [
+   "bomaderry",
+   "nowra"
+  ],
+  "postcodes": [
+   "2541"
+  ],
+  "networks": {
+   "endeavour-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "orange": {
+  "name": "Orange",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Orange",
+  "aliases": [],
+  "postcodes": [
+   "2800"
+  ],
+  "networks": {
+   "endeavour-energy": 1,
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "perth": {
+  "name": "Perth",
+  "state": "WA",
+  "basis": "ABS Greater Capital City area 5GPER",
+  "aliases": [],
+  "postcodes": [
+   "6000",
+   "6003",
+   "6004",
+   "6005",
+   "6006",
+   "6007",
+   "6008",
+   "6009",
+   "6010",
+   "6011",
+   "6012",
+   "6014",
+   "6015",
+   "6016",
+   "6017",
+   "6018",
+   "6019",
+   "6020",
+   "6021",
+   "6022",
+   "6023",
+   "6024",
+   "6025",
+   "6026",
+   "6027",
+   "6028",
+   "6029",
+   "6030",
+   "6031",
+   "6032",
+   "6033",
+   "6034",
+   "6035",
+   "6036",
+   "6037",
+   "6038",
+   "6050",
+   "6051",
+   "6052",
+   "6053",
+   "6054",
+   "6055",
+   "6056",
+   "6057",
+   "6058",
+   "6059",
+   "6060",
+   "6061",
+   "6062",
+   "6063",
+   "6064",
+   "6065",
+   "6066",
+   "6067",
+   "6068",
+   "6069",
+   "6070",
+   "6071",
+   "6072",
+   "6073",
+   "6074",
+   "6076",
+   "6077",
+   "6078",
+   "6079",
+   "6081",
+   "6082",
+   "6083",
+   "6084",
+   "6090",
+   "6100",
+   "6101",
+   "6102",
+   "6103",
+   "6104",
+   "6105",
+   "6106",
+   "6107",
+   "6108",
+   "6109",
+   "6110",
+   "6111",
+   "6112",
+   "6121",
+   "6122",
+   "6123",
+   "6124",
+   "6125",
+   "6126",
+   "6147",
+   "6148",
+   "6149",
+   "6150",
+   "6151",
+   "6152",
+   "6153",
+   "6154",
+   "6155",
+   "6156",
+   "6157",
+   "6158",
+   "6159",
+   "6160",
+   "6161",
+   "6162",
+   "6163",
+   "6164",
+   "6165",
+   "6166",
+   "6167",
+   "6168",
+   "6169",
+   "6170",
+   "6171",
+   "6172",
+   "6173",
+   "6174",
+   "6175",
+   "6176",
+   "6180",
+   "6181",
+   "6182",
+   "6207",
+   "6208",
+   "6209",
+   "6210",
+   "6211",
+   "6214",
+   "6556",
+   "6558"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "port-augusta": {
+  "name": "Port Augusta",
+  "state": "SA",
+  "basis": "ABS Significant Urban Area Port Augusta",
+  "aliases": [],
+  "postcodes": [
+   "5700",
+   "5710"
+  ],
+  "networks": {
+   "sa-power-networks": 2
+  },
+  "fringe_networks": {}
+ },
+ "port-hedland": {
+  "name": "Port Hedland",
+  "state": "WA",
+  "basis": "ABS Significant Urban Area Port Hedland",
+  "aliases": [],
+  "postcodes": [
+   "6721",
+   "6722"
+  ],
+  "networks": {},
+  "fringe_networks": {}
+ },
+ "port-lincoln": {
+  "name": "Port Lincoln",
+  "state": "SA",
+  "basis": "ABS Significant Urban Area Port Lincoln",
+  "aliases": [],
+  "postcodes": [
+   "5606"
+  ],
+  "networks": {
+   "sa-power-networks": 1
+  },
+  "fringe_networks": {}
+ },
+ "port-macquarie": {
+  "name": "Port Macquarie",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Port Macquarie",
+  "aliases": [],
+  "postcodes": [
+   "2444"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "port-pirie": {
+  "name": "Port Pirie",
+  "state": "SA",
+  "basis": "ABS Significant Urban Area Port Pirie",
+  "aliases": [],
+  "postcodes": [
+   "5540"
+  ],
+  "networks": {
+   "sa-power-networks": 1
+  },
+  "fringe_networks": {}
+ },
+ "portland": {
+  "name": "Portland",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Portland",
+  "aliases": [],
+  "postcodes": [
+   "3305"
+  ],
+  "networks": {
+   "powercor": 1
+  },
+  "fringe_networks": {}
+ },
+ "rockhampton": {
+  "name": "Rockhampton",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Rockhampton",
+  "aliases": [],
+  "postcodes": [
+   "4700",
+   "4701",
+   "4711"
+  ],
+  "networks": {
+   "ergon-energy": 3
+  },
+  "fringe_networks": {}
+ },
+ "sale": {
+  "name": "Sale",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Sale",
+  "aliases": [],
+  "postcodes": [
+   "3850"
+  ],
+  "networks": {
+   "ausnet-services": 1
+  },
+  "fringe_networks": {}
+ },
+ "shepparton-mooroopna": {
+  "name": "Shepparton - Mooroopna",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Shepparton - Mooroopna",
+  "aliases": [
+   "mooroopna",
+   "shepparton"
+  ],
+  "postcodes": [
+   "3629",
+   "3630",
+   "3631"
+  ],
+  "networks": {
+   "powercor": 3,
+   "ausnet-services": 1
+  },
+  "fringe_networks": {}
+ },
+ "singleton": {
+  "name": "Singleton",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Singleton",
+  "aliases": [],
+  "postcodes": [
+   "2330"
+  ],
+  "networks": {
+   "ausgrid": 1,
+   "endeavour-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "sunshine-coast": {
+  "name": "Sunshine Coast",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Sunshine Coast",
+  "aliases": [],
+  "postcodes": [
+   "4517",
+   "4518",
+   "4519",
+   "4550",
+   "4551",
+   "4553",
+   "4554",
+   "4555",
+   "4556",
+   "4557",
+   "4558",
+   "4559",
+   "4560",
+   "4561",
+   "4562",
+   "4563",
+   "4564",
+   "4565",
+   "4566",
+   "4567",
+   "4568",
+   "4569",
+   "4571",
+   "4572",
+   "4573",
+   "4575"
+  ],
+  "networks": {
+   "energex": 26
+  },
+  "fringe_networks": {}
+ },
+ "swan-hill": {
+  "name": "Swan Hill",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Swan Hill",
+  "aliases": [],
+  "postcodes": [
+   "3585"
+  ],
+  "networks": {
+   "powercor": 1
+  },
+  "fringe_networks": {}
+ },
+ "sydney": {
+  "name": "Sydney",
+  "state": "NSW",
+  "basis": "ABS Greater Capital City area 1GSYD",
+  "aliases": [],
+  "postcodes": [
+   "2000",
+   "2007",
+   "2008",
+   "2009",
+   "2010",
+   "2011",
+   "2015",
+   "2016",
+   "2017",
+   "2018",
+   "2019",
+   "2020",
+   "2021",
+   "2022",
+   "2023",
+   "2024",
+   "2025",
+   "2026",
+   "2027",
+   "2028",
+   "2029",
+   "2030",
+   "2031",
+   "2032",
+   "2033",
+   "2034",
+   "2035",
+   "2036",
+   "2037",
+   "2038",
+   "2039",
+   "2040",
+   "2041",
+   "2042",
+   "2043",
+   "2044",
+   "2045",
+   "2046",
+   "2047",
+   "2048",
+   "2049",
+   "2050",
+   "2060",
+   "2061",
+   "2062",
+   "2063",
+   "2064",
+   "2065",
+   "2066",
+   "2067",
+   "2068",
+   "2069",
+   "2070",
+   "2071",
+   "2072",
+   "2073",
+   "2074",
+   "2075",
+   "2076",
+   "2077",
+   "2079",
+   "2080",
+   "2081",
+   "2082",
+   "2083",
+   "2084",
+   "2085",
+   "2086",
+   "2087",
+   "2088",
+   "2089",
+   "2090",
+   "2092",
+   "2093",
+   "2094",
+   "2095",
+   "2096",
+   "2097",
+   "2099",
+   "2100",
+   "2101",
+   "2102",
+   "2103",
+   "2104",
+   "2105",
+   "2106",
+   "2107",
+   "2108",
+   "2110",
+   "2111",
+   "2112",
+   "2113",
+   "2114",
+   "2115",
+   "2116",
+   "2117",
+   "2118",
+   "2119",
+   "2120",
+   "2121",
+   "2122",
+   "2125",
+   "2126",
+   "2127",
+   "2128",
+   "2130",
+   "2131",
+   "2132",
+   "2133",
+   "2134",
+   "2135",
+   "2136",
+   "2137",
+   "2138",
+   "2140",
+   "2141",
+   "2142",
+   "2143",
+   "2144",
+   "2145",
+   "2146",
+   "2147",
+   "2148",
+   "2150",
+   "2151",
+   "2152",
+   "2153",
+   "2154",
+   "2155",
+   "2156",
+   "2157",
+   "2158",
+   "2159",
+   "2160",
+   "2161",
+   "2162",
+   "2163",
+   "2164",
+   "2165",
+   "2166",
+   "2167",
+   "2168",
+   "2170",
+   "2171",
+   "2172",
+   "2173",
+   "2174",
+   "2175",
+   "2176",
+   "2177",
+   "2178",
+   "2179",
+   "2190",
+   "2191",
+   "2192",
+   "2193",
+   "2194",
+   "2195",
+   "2196",
+   "2197",
+   "2198",
+   "2199",
+   "2200",
+   "2203",
+   "2204",
+   "2205",
+   "2206",
+   "2207",
+   "2208",
+   "2209",
+   "2210",
+   "2211",
+   "2212",
+   "2213",
+   "2214",
+   "2216",
+   "2217",
+   "2218",
+   "2219",
+   "2220",
+   "2221",
+   "2222",
+   "2223",
+   "2224",
+   "2225",
+   "2226",
+   "2227",
+   "2228",
+   "2229",
+   "2230",
+   "2231",
+   "2232",
+   "2233",
+   "2234",
+   "2250",
+   "2251",
+   "2256",
+   "2257",
+   "2258",
+   "2259",
+   "2260",
+   "2261",
+   "2262",
+   "2263",
+   "2555",
+   "2556",
+   "2557",
+   "2558",
+   "2559",
+   "2560",
+   "2563",
+   "2564",
+   "2565",
+   "2566",
+   "2567",
+   "2568",
+   "2569",
+   "2570",
+   "2571",
+   "2572",
+   "2573",
+   "2574",
+   "2745",
+   "2747",
+   "2748",
+   "2749",
+   "2750",
+   "2752",
+   "2753",
+   "2754",
+   "2756",
+   "2757",
+   "2758",
+   "2759",
+   "2760",
+   "2761",
+   "2762",
+   "2763",
+   "2765",
+   "2766",
+   "2767",
+   "2768",
+   "2769",
+   "2770",
+   "2773",
+   "2774",
+   "2775",
+   "2776",
+   "2777",
+   "2778",
+   "2779",
+   "2780",
+   "2782",
+   "2783",
+   "2784",
+   "2785",
+   "2786"
+  ],
+  "networks": {
+   "ausgrid": 174,
+   "endeavour-energy": 106
+  },
+  "fringe_networks": {}
+ },
+ "tamworth": {
+  "name": "Tamworth",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Tamworth",
+  "aliases": [],
+  "postcodes": [
+   "2340"
+  ],
+  "networks": {
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "taree": {
+  "name": "Taree",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Taree",
+  "aliases": [],
+  "postcodes": [
+   "2429",
+   "2430"
+  ],
+  "networks": {
+   "essential-energy": 2
+  },
+  "fringe_networks": {}
+ },
+ "toowoomba": {
+  "name": "Toowoomba",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Toowoomba",
+  "aliases": [],
+  "postcodes": [
+   "4350",
+   "4352",
+   "4358",
+   "4400"
+  ],
+  "networks": {
+   "ergon-energy": 4,
+   "energex": 2,
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "townsville": {
+  "name": "Townsville",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Townsville",
+  "aliases": [],
+  "postcodes": [
+   "4810",
+   "4811",
+   "4812",
+   "4814",
+   "4815",
+   "4817",
+   "4818"
+  ],
+  "networks": {
+   "ergon-energy": 7
+  },
+  "fringe_networks": {}
+ },
+ "traralgon-morwell": {
+  "name": "Traralgon - Morwell",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Traralgon - Morwell",
+  "aliases": [
+   "morwell",
+   "traralgon"
+  ],
+  "postcodes": [
+   "3840",
+   "3844"
+  ],
+  "networks": {
+   "ausnet-services": 2
+  },
+  "fringe_networks": {}
+ },
+ "ulladulla": {
+  "name": "Ulladulla",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Ulladulla",
+  "aliases": [],
+  "postcodes": [
+   "2539"
+  ],
+  "networks": {
+   "endeavour-energy": 1,
+   "essential-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "ulverstone": {
+  "name": "Ulverstone",
+  "state": "TAS",
+  "basis": "ABS Significant Urban Area Ulverstone",
+  "aliases": [],
+  "postcodes": [
+   "7315"
+  ],
+  "networks": {
+   "tasnetworks": 1
+  },
+  "fringe_networks": {}
+ },
+ "victor-harbor-goolwa": {
+  "name": "Victor Harbor - Goolwa",
+  "state": "SA",
+  "basis": "ABS Significant Urban Area Victor Harbor - Goolwa",
+  "aliases": [
+   "goolwa",
+   "victor-harbor"
+  ],
+  "postcodes": [
+   "5211",
+   "5212",
+   "5213",
+   "5214"
+  ],
+  "networks": {
+   "sa-power-networks": 4
+  },
+  "fringe_networks": {}
+ },
+ "wagga-wagga": {
+  "name": "Wagga Wagga",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Wagga Wagga",
+  "aliases": [],
+  "postcodes": [
+   "2650",
+   "2661",
+   "2678"
+  ],
+  "networks": {
+   "essential-energy": 3
+  },
+  "fringe_networks": {}
+ },
+ "wangaratta": {
+  "name": "Wangaratta",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Wangaratta",
+  "aliases": [],
+  "postcodes": [
+   "3677"
+  ],
+  "networks": {
+   "ausnet-services": 1
+  },
+  "fringe_networks": {}
+ },
+ "warragul-drouin": {
+  "name": "Warragul - Drouin",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Warragul - Drouin",
+  "aliases": [
+   "drouin",
+   "warragul"
+  ],
+  "postcodes": [
+   "3816",
+   "3818",
+   "3820",
+   "3821",
+   "3822"
+  ],
+  "networks": {
+   "ausnet-services": 5
+  },
+  "fringe_networks": {}
+ },
+ "warrnambool": {
+  "name": "Warrnambool",
+  "state": "VIC",
+  "basis": "ABS Significant Urban Area Warrnambool",
+  "aliases": [],
+  "postcodes": [
+   "3277",
+   "3280",
+   "3281"
+  ],
+  "networks": {
+   "powercor": 3
+  },
+  "fringe_networks": {}
+ },
+ "warwick": {
+  "name": "Warwick",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Warwick",
+  "aliases": [],
+  "postcodes": [
+   "4370"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ },
+ "whyalla": {
+  "name": "Whyalla",
+  "state": "SA",
+  "basis": "ABS Significant Urban Area Whyalla",
+  "aliases": [],
+  "postcodes": [
+   "5600",
+   "5608",
+   "5609"
+  ],
+  "networks": {
+   "sa-power-networks": 3
+  },
+  "fringe_networks": {}
+ },
+ "wollongong": {
+  "name": "Wollongong",
+  "state": "NSW",
+  "basis": "ABS Significant Urban Area Wollongong",
+  "aliases": [],
+  "postcodes": [
+   "2500",
+   "2502",
+   "2505",
+   "2506",
+   "2508",
+   "2515",
+   "2516",
+   "2517",
+   "2518",
+   "2519",
+   "2525",
+   "2526",
+   "2527",
+   "2528",
+   "2529",
+   "2530",
+   "2533"
+  ],
+  "networks": {
+   "endeavour-energy": 17
+  },
+  "fringe_networks": {}
+ },
+ "yeppoon": {
+  "name": "Yeppoon",
+  "state": "QLD",
+  "basis": "ABS Significant Urban Area Yeppoon",
+  "aliases": [],
+  "postcodes": [
+   "4703"
+  ],
+  "networks": {
+   "ergon-energy": 1
+  },
+  "fringe_networks": {}
+ }
+}

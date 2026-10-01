@@ -1,31 +1,5 @@
-{
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "termina-rates-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-09-01",
-
-  // Served on api.termina.com. The edge cache only works on a custom domain, not *.workers.dev.
-  "routes": [{ "pattern": "api.termina.com", "custom_domain": true }],
-
-  // 120 requests per minute per IP. namespace_id is any integer unique to your account.
-  "ratelimits": [
-    { "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 120, "period": 60 } }
-  ],
-
-  "vars": {
-    "SITE_URL": "https://termina.com",
-    "PAGE_PATH_TEMPLATE": "/cheapest-business-electricity/{state}",
-    "METABASE_URL": "https://metabase.termina.io",
-    // Saved question IDs. `npm run sync:metabase` prints these.
-    "CARD_LOCATION": "TODO",
-    "CARD_USAGE": "TODO",
-    "CARD_BENCHMARK": "TODO",
-    "CARD_PLANS": "TODO",
-    "CARD_STATS": "TODO"
-  },
-  // Secrets: set in the Cloudflare dashboard (Worker > Settings > Variables and Secrets)
-  // or with `npx wrangler secret put <NAME>`:
-  //   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET, METABASE_API_KEY
-
-  "observability": { "enabled": true }
+// .sql files are bundled as plain text (see "rules" in wrangler.jsonc)
+declare module "*.sql" {
+  const sql: string;
+  export default sql;
 }

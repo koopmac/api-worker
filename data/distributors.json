@@ -1,0 +1,15 @@
+{
+  "ausgrid":           {"name": "Ausgrid", "state": "NSW", "db_slug": "ausgrid", "cdr_names": ["Ausgrid"]},
+  "endeavour-energy":  {"name": "Endeavour Energy", "state": "NSW", "db_slug": "endeavour", "cdr_names": ["Endeavour Energy", "Endeavour"]},
+  "essential-energy":  {"name": "Essential Energy", "state": "NSW", "db_slug": "essential", "cdr_names": ["Essential Energy", "Essential", "Essential Energy Standard", "Essential Energy Far West"]},
+  "evoenergy":         {"name": "Evoenergy", "state": "ACT", "db_slug": "evoenergy-electricity", "cdr_names": ["Evoenergy", "ActewAGL Distribution"]},
+  "energex":           {"name": "Energex", "state": "QLD", "db_slug": "energex", "cdr_names": ["Energex"]},
+  "ergon-energy":      {"name": "Ergon Energy", "state": "QLD", "db_slug": "ergon", "cdr_names": ["Ergon Energy", "Ergon"]},
+  "sa-power-networks": {"name": "SA Power Networks", "state": "SA", "db_slug": "sapower", "cdr_names": ["SA Power Networks", "SAPN"]},
+  "tasnetworks":       {"name": "TasNetworks", "state": "TAS", "db_slug": "tasnetworks", "cdr_names": ["TasNetworks", "Tas Networks"]},
+  "citipower":         {"name": "CitiPower", "state": "VIC", "db_slug": "citipower", "cdr_names": ["CitiPower", "Citipower"]},
+  "powercor":          {"name": "Powercor", "state": "VIC", "db_slug": "powercor", "cdr_names": ["Powercor"]},
+  "jemena":            {"name": "Jemena", "state": "VIC", "db_slug": "jemena", "cdr_names": ["Jemena", "Jemena Electricity"]},
+  "united-energy":     {"name": "United Energy", "state": "VIC", "db_slug": "united", "cdr_names": ["United Energy", "United Energy Distribution"]},
+  "ausnet-services":   {"name": "AusNet Services", "state": "VIC", "db_slug": "ausnet", "cdr_names": ["AusNet Services", "AusNet", "Ausnet Services", "AusNet Services (electricity)"]}
+}

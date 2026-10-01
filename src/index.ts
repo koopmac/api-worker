@@ -86,7 +86,8 @@ const API_VERSION = "v1";
 const EDGE_CACHE_SECONDS = 3600;
 const BROWSER_CACHE_SECONDS = 300;
 const METABASE_TIMEOUT_MS = 20_000;
-const DEFAULT_LIMIT = 20;
+const DEFAULT_LIMIT = 10; // plans per page
+const COMMON_USAGE_KWH = 10000; // shared usage when several networks are merged
 const MAX_LIMIT = 50;
 const OFFER_SOURCES = ["all", "public", "termina_buying_group"] as const;
 
@@ -257,6 +258,16 @@ async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
     warnings.push({ code: "rates_not_available", message: `We don't have rates for ${net.name} yet.` });
   }
 
+  // Plans from several networks are ranked against each other, so they must be costed at ONE usage.
+  // Each network's own default (its regulator reference) can differ: 10,000 kWh for DMO/VDO, 25,000 for the ACT.
+  if (targets.length > 1 && q.usage_kwh === undefined) {
+    q.usage_kwh = String(COMMON_USAGE_KWH);
+    warnings.push({
+      code: "common_usage",
+      message: `Plans from ${targets.length} networks are compared at ${COMMON_USAGE_KWH.toLocaleString("en-AU")} kWh a year, the regulators' usual small business reference. Pass usage_kwh for your site.`,
+    });
+  }
+
   // 2. Cost every target network in parallel (5 queries each)
   let results = await Promise.all(targets.map((t) => costNetwork(env, q, t)));
 
@@ -340,6 +351,20 @@ async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
   const remaining = covered.some((r) => !done.has(r.key));
   const offset = q.cursor?.o ?? 0;
   const next_cursor = remaining ? encodeCursor({ o: offset + page.length, p: positions, d: [...done] }) : null;
+  // Total across all pages and networks, for the current offer_source filter (from the stats query)
+  const totals = covered.map((r) => Number((r.stats as Row | null)?.plans_matching_filter));
+  const total = totals.every(Number.isFinite) ? totals.reduce((a, b) => a + b, 0) : null;
+  const pagination = {
+    page_size: q.limit,
+    page: Math.floor(offset / q.limit) + 1,
+    total_pages: total === null ? null : Math.max(1, Math.ceil(total / q.limit)),
+    total_plans: total,
+    returned: page.length,
+    from_rank: page.length ? offset + 1 : null,
+    to_rank: page.length ? offset + page.length : null,
+    has_more: next_cursor !== null,
+    next_cursor,
+  };
 
   const plans = page.map((c, i) => {
     const out: Row = {};
@@ -363,6 +388,7 @@ async function getRates(search: URLSearchParams, env: Env): Promise<Response> {
       by_network,
       plans,
       next_cursor,
+      pagination,
       warnings,
       env,
       state: location.state,
@@ -479,6 +505,7 @@ function envelope(b: {
   by_network: unknown[];
   plans: unknown[];
   next_cursor: string | null;
+  pagination?: unknown;
   warnings: Warning[];
   env: Env;
   state: string | null;
@@ -492,6 +519,7 @@ function envelope(b: {
     by_network: b.by_network,
     plans: b.plans,
     next_cursor: b.next_cursor,
+    pagination: b.pagination ?? null,
     warnings: b.warnings,
     page_url: b.city
       ? new URL(b.env.CITY_PAGE_PATH_TEMPLATE.replace("{city}", b.city), b.env.SITE_URL).toString()
